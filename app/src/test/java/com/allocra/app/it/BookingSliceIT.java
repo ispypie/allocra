@@ -253,7 +253,9 @@ class BookingSliceIT {
 	@Test
 	@DisplayName("PRD-BKG-008 / PRD-MEM-004: a viewer cannot cancel a booking")
 	void viewerCannotCancel() throws Exception {
-		UUID bookingId = confirmBooking(at(9, 30));
+		// 11:00 slot is isolated from the slots other tests book (avoids
+		// order-dependent overlap).
+		UUID bookingId = confirmBooking(at(11, 0));
 		assertThat(post("/v1/bookings/" + bookingId + "/cancel", "viewer", TENANT_A, "").statusCode()).isEqualTo(403);
 	}
 
