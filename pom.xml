@@ -112,6 +112,12 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>${maven-failsafe-plugin.version}</version>
+          <configuration>
+            <!-- Put the real classpath on the command line rather than a manifest-only
+                 booter jar, so classpath directory scanning (e.g. Flyway locating
+                 classpath:db/migration) works in the forked test JVM. -->
+            <useManifestOnlyJar>false</useManifestOnlyJar>
+          </configuration>
           <executions>
             <execution>
               <goals>

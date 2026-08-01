@@ -37,7 +37,12 @@ class MigrationIT {
 	@Test
 	@DisplayName("PRD-NFR-005: Flyway migrations apply and create the baseline schema")
 	void migrationsApplyAndCreateBaseline() throws Exception {
-		Flyway flyway = Flyway.configure().dataSource(dataSource()).locations("classpath:db/migration").load();
+		// Deterministic filesystem location (failsafe working dir is the module base
+		// dir),
+		// so this test does not depend on classpath directory scanning in the forked
+		// JVM.
+		Flyway flyway = Flyway.configure().dataSource(dataSource())
+				.locations("filesystem:src/main/resources/db/migration").load();
 
 		var result = flyway.migrate();
 		assertTrue(result.migrationsExecuted >= 1, "expected at least one migration to run");

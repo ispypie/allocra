@@ -2,6 +2,7 @@ package com.allocra.app.it;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.allocra.app.AllocraApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * the readiness/liveness probes report healthy (PRD-NFR-002/003). Requires
  * Docker; runs in the failsafe phase.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = AllocraApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class ApplicationSmokeIT {
 

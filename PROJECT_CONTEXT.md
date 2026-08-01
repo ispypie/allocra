@@ -47,8 +47,14 @@ it **without redesign**, but no public UI is built in this phase.
   logging (cloud profile), Cloud Run `Dockerfile`, and GitHub Actions CI (incl.
   documentation validation). `mvn package` and `mvn -DskipITs verify` are green locally;
   Testcontainers ITs and SpotBugs run in CI on JDK 21. See `README.md`.
-- Deliverable C — thin vertical slice *plan* (design, not full implementation): *next*.
-- Deliverable D — acceptance test plan: *not started*.
+- **Deliverable C — thin vertical slice *plan*: DONE (design, awaiting review).** See
+  [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md). Slice code is **not**
+  written until the plan is reviewed.
+- **Deliverable D — acceptance test plan: DONE.** See
+  [docs/10-ACCEPTANCE-TEST-PLAN.md](docs/10-ACCEPTANCE-TEST-PLAN.md).
+
+Next action awaiting the maintainer: **review Deliverables C & D**, resolve the two open
+decisions (buffers in-slice? real Firebase filter in-slice?), then implement the slice TDD.
 
 **We are not implementing the full product.** Do not build broad functionality until
 the foundation plan is reviewed.
@@ -157,6 +163,8 @@ whether to enable RLS in phase 1, and UUID vs bigint identifier strategy (defaul
 | [docs/06-FUTURE-IDEAS.md](docs/06-FUTURE-IDEAS.md) | Deferred features & ideas |
 | [docs/07-OPEN-QUESTIONS.md](docs/07-OPEN-QUESTIONS.md) | Open questions & recorded assumptions |
 | [docs/08-REQUIREMENTS-TRACEABILITY.md](docs/08-REQUIREMENTS-TRACEABILITY.md) | Requirement → code → test mapping |
+| [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md) | Thin internal-booking vertical slice design (Deliverable C) |
+| [docs/10-ACCEPTANCE-TEST-PLAN.md](docs/10-ACCEPTANCE-TEST-PLAN.md) | Slice → PRD → acceptance-test mapping (Deliverable D) |
 | [docs/adr/](docs/adr/) | Architecture Decision Records (ADR-001 … ADR-010) |
 
 ## Conflict precedence
