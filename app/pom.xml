@@ -99,6 +99,13 @@
             <goals>
               <goal>repackage</goal>
             </goals>
+            <configuration>
+              <!-- Produce the executable jar as app-<version>-boot.jar and KEEP the plain
+                   jar / target/classes as the main artifact. Without a classifier, repackage
+                   replaces the main artifact with a fat jar (classes under BOOT-INF/classes),
+                   which the module's own failsafe integration tests then cannot load. -->
+              <classifier>boot</classifier>
+            </configuration>
           </execution>
         </executions>
       </plugin>

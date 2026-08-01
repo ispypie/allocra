@@ -11,7 +11,7 @@ FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
 # Run as a non-root user.
 RUN groupadd -r allocra && useradd -r -g allocra -u 1001 allocra
-COPY --from=build /workspace/app/target/app-*.jar /app/app.jar
+COPY --from=build /workspace/app/target/app-*-boot.jar /app/app.jar
 USER 1001
 # Cloud Run injects PORT; server.port binds to it (see application.yml). Default profile
 # for a deployed container is 'cloud' (structured logging).
