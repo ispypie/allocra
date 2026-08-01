@@ -45,8 +45,9 @@ it **without redesign**, but no public UI is built in this phase.
   `btree_gist` + `tenant`), Testcontainers ITs, JUnit, ArchUnit boundary tests, Spotless
   formatting, SpotBugs (opt-in `-Pquality`), actuator health/liveness/readiness, structured
   logging (cloud profile), Cloud Run `Dockerfile`, and GitHub Actions CI (incl.
-  documentation validation). `mvn package` and `mvn -DskipITs verify` are green locally;
-  Testcontainers ITs and SpotBugs run in CI on JDK 21. See `README.md`.
+  documentation validation). **CI is green** on JDK 21 (build job: unit + ArchUnit + doc +
+  Testcontainers integration tests + Spotless; static-analysis job: SpotBugs). Repo:
+  `github.com/ispypie/allocra` (private). See `README.md`.
 - **Deliverable C — thin vertical slice *plan*: DONE (design, awaiting review).** See
   [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md). Slice code is **not**
   written until the plan is reviewed.
