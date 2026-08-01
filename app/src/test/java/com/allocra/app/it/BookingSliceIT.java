@@ -220,7 +220,67 @@ class BookingSliceIT {
 		assertThat(HTTP.send(req, HttpResponse.BodyHandlers.ofString()).statusCode()).isEqualTo(401);
 	}
 
+	@Test
+	@DisplayName("PRD-BKG-008 / BKG-AT-007: cancelling releases reservations and frees the slot for rebooking")
+	void cancelReleasesReservationsAndFreesSlot() throws Exception {
+		Instant start = at(15, 0);
+		UUID bookingId = confirmBooking(start);
+		assertThat(activeReservations(bookingId)).isEqualTo(2);
+
+		assertThat(post("/v1/bookings/" + bookingId + "/cancel", "sched", TENANT_A, "").statusCode()).isEqualTo(200);
+		assertThat(bookingStatus(bookingId)).isEqualTo("CANCELLED");
+		assertThat(activeReservations(bookingId)).isEqualTo(0);
+
+		// The freed slot can be booked again.
+		assertThat(post("/v1/bookings", "sched", TENANT_A, confirmBody(start)).statusCode()).isEqualTo(201);
+	}
+
+	@Test
+	@DisplayName("PRD-BKG-009 / BKG-AT-008: complete and no-show transitions; invalid transitions are rejected")
+	void completeAndNoShowAndInvalidTransition() throws Exception {
+		UUID toComplete = confirmBooking(at(13, 0));
+		assertThat(post("/v1/bookings/" + toComplete + "/complete", "sched", TENANT_A, "").statusCode()).isEqualTo(200);
+		assertThat(bookingStatus(toComplete)).isEqualTo("COMPLETED");
+
+		UUID toNoShow = confirmBooking(at(12, 0));
+		assertThat(post("/v1/bookings/" + toNoShow + "/no-show", "sched", TENANT_A, "").statusCode()).isEqualTo(200);
+		assertThat(bookingStatus(toNoShow)).isEqualTo("NO_SHOW");
+
+		// A completed booking cannot be cancelled (invalid transition → 409).
+		assertThat(post("/v1/bookings/" + toComplete + "/cancel", "sched", TENANT_A, "").statusCode()).isEqualTo(409);
+	}
+
+	@Test
+	@DisplayName("PRD-BKG-008 / PRD-MEM-004: a viewer cannot cancel a booking")
+	void viewerCannotCancel() throws Exception {
+		UUID bookingId = confirmBooking(at(9, 30));
+		assertThat(post("/v1/bookings/" + bookingId + "/cancel", "viewer", TENANT_A, "").statusCode()).isEqualTo(403);
+	}
+
+	@Test
+	@DisplayName("PRD-BKG-008: cancelling an unknown booking returns 404")
+	void cancelUnknownBookingIsNotFound() throws Exception {
+		assertThat(post("/v1/bookings/" + UUID.randomUUID() + "/cancel", "sched", TENANT_A, "").statusCode())
+				.isEqualTo(404);
+	}
+
 	// --- helpers ---
+
+	private static UUID confirmBooking(Instant start) throws Exception {
+		HttpResponse<String> response = post("/v1/bookings", "sched", TENANT_A, confirmBody(start));
+		assertThat(response.statusCode()).isEqualTo(201);
+		return UUID.fromString(json.readTree(response.body()).get("bookingId").asText());
+	}
+
+	private static String bookingStatus(UUID bookingId) {
+		return jdbc.sql("SELECT status FROM booking WHERE tenant_id=? AND id=?").params(List.of(TENANT_A, bookingId))
+				.query(String.class).single();
+	}
+
+	private static Integer activeReservations(UUID bookingId) {
+		return jdbc.sql("SELECT count(*) FROM reservation WHERE tenant_id=? AND booking_id=? AND status='ACTIVE'")
+				.params(List.of(TENANT_A, bookingId)).query(Integer.class).single();
+	}
 
 	private static String confirmBody(Instant start) throws Exception {
 		return json.writeValueAsString(

@@ -11,7 +11,8 @@ import java.util.Set;
  */
 public enum Role {
 	ORG_ADMIN(Set.of(Permission.values())), SCHEDULER(Set.of(Permission.BOOKING_CREATE, Permission.BOOKING_VIEW,
-			Permission.BOOKING_CANCEL, Permission.BOOKING_RESCHEDULE, Permission.AVAILABILITY_MANAGE)), RESOURCE_MEMBER(
+			Permission.BOOKING_CANCEL, Permission.BOOKING_RESCHEDULE, Permission.BOOKING_UPDATE,
+			Permission.AVAILABILITY_MANAGE)), RESOURCE_MEMBER(
 					Set.of(Permission.BOOKING_VIEW)), VIEWER(Set.of(Permission.BOOKING_VIEW));
 
 	private final Set<Permission> permissions;

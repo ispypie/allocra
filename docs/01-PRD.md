@@ -139,7 +139,8 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-MEM-003** *(ACCEPTED)* Authorization is by **permission**, not by hardcoded
   role-name checks. Permissions include: resource management, service management,
   availability management, booking creation, booking viewing, booking cancellation,
-  booking rescheduling, organisation membership management.
+  booking rescheduling, booking status update (complete/no-show), organisation membership
+  management.
 - **PRD-MEM-004** *(ACCEPTED)* Membership must be validated on every tenant-scoped action;
   actions the member's permissions do not grant are rejected. *(AT: MEM-AT-001)*
 
@@ -255,6 +256,13 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
   *(AT: BKG-AT-004, RSV-AT-002)*
 - **PRD-BKG-007** *(DEFERRED)* Booking holds (temporary reservations pre-confirmation),
   required by self-service. → `06-FUTURE-IDEAS.md`.
+- **PRD-BKG-008** *(ACCEPTED)* A `CONFIRMED` booking may be **cancelled** by a user with the
+  `BOOKING_CANCEL` permission. Cancellation sets status `CANCELLED` and **releases all of the
+  booking's reservations**, so the freed slot becomes bookable again. Only a `CONFIRMED`
+  booking may be cancelled (invalid transitions are rejected). *(AT: BKG-AT-007)*
+- **PRD-BKG-009** *(ACCEPTED)* A `CONFIRMED` booking may be marked **`COMPLETED`** or
+  **`NO_SHOW`** by a user with the `BOOKING_UPDATE` permission. These are terminal outcome
+  states and do not change reservations. Only a `CONFIRMED` booking may transition. *(AT: BKG-AT-008)*
 
 ### 7.10 Assignments & policies (`ASN`)
 
@@ -380,6 +388,8 @@ is cross-referenced. Initial acceptance criteria:
 | BKG-AT-004 | Confirmation atomically reserves every required resource or fails | PRD-BKG-004/005/006, PRD-RSV-003 |
 | BKG-AT-005 | A booking carries no hardcoded resource ids; assignment change keeps identity | PRD-BKG-001, PRD-ASN-002 |
 | BKG-AT-006 | Direct search never reassigns an existing booking | PRD-SCH-004, PRD-ASN-004 |
+| BKG-AT-007 | Cancelling a booking releases its reservations; the slot can be rebooked | PRD-BKG-008 |
+| BKG-AT-008 | A confirmed booking can be marked COMPLETED or NO_SHOW; invalid transitions rejected | PRD-BKG-009 |
 | RSV-AT-001 | A reserved resource is excluded from conflicting options; overlap rejected | PRD-RSV-002/004 |
 | RSV-AT-002 | Concurrent confirmations for the same resource → only one succeeds | PRD-RSV-004 |
 | SCH-AT-005 | Scheduling services hold no mutable authoritative calendar state | PRD-SCH-001, PRD-NFR-001 |

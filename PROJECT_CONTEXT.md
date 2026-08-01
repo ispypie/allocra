@@ -64,8 +64,10 @@ PG features (DEC-022). Slice infrastructure (persistence/application/web) curren
 the `app` module against pure domain types in each module; extracting per-module hexagonal
 adapters is a documented follow-up (see [docs/06-FUTURE-IDEAS.md](docs/06-FUTURE-IDEAS.md)).
 
-Next candidate work: booking lifecycle endpoints (cancel/complete/no-show), config/admin
-APIs, then the public self-service channel — all beyond the current milestone.
+Booking lifecycle endpoints (cancel/complete/no-show) are **implemented and CI-green**
+(PRD-BKG-008/009): cancellation releases reservations so the slot can be rebooked. Next
+candidate work: config/admin APIs, real Firebase token verifier (replace the stub, DEC-020),
+then the public self-service channel — all beyond the current milestone.
 
 **We are not implementing the full product.** Do not build broad functionality until
 the foundation plan is reviewed.

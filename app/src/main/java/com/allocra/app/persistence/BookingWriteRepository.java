@@ -7,6 +7,7 @@ import com.allocra.common.tenant.TenantId;
 import com.allocra.reservations.Reservation;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -75,6 +76,34 @@ public class BookingWriteRepository {
 				VALUES (?,?,?,?,?,?)
 				""").param(tenantId.value()).param(UUID.randomUUID()).param(actor).param(action).param(targetType)
 				.param(targetId).update();
+	}
+
+	/** Current status of a booking, if it exists (tenant-scoped). */
+	public Optional<String> findStatus(TenantId tenantId, UUID bookingId) {
+		return jdbc.sql("SELECT status FROM booking WHERE tenant_id = ? AND id = ?").param(tenantId.value())
+				.param(bookingId).query(String.class).optional();
+	}
+
+	/**
+	 * Transitions a booking from {@code fromStatus} to {@code toStatus} only if it
+	 * is still in {@code fromStatus} (guarding concurrent/invalid transitions).
+	 *
+	 * @return the number of rows updated (0 means the booking was not in
+	 *         {@code fromStatus})
+	 */
+	public int updateStatus(TenantId tenantId, UUID bookingId, String fromStatus, String toStatus) {
+		return jdbc.sql("UPDATE booking SET status = ? WHERE tenant_id = ? AND id = ? AND status = ?").param(toStatus)
+				.param(tenantId.value()).param(bookingId).param(fromStatus).update();
+	}
+
+	/**
+	 * Releases a booking's ACTIVE reservations so the freed slot can be rebooked
+	 * (PRD-BKG-008).
+	 */
+	public void releaseReservations(TenantId tenantId, UUID bookingId) {
+		jdbc.sql(
+				"UPDATE reservation SET status = 'RELEASED' WHERE tenant_id = ? AND booking_id = ? AND status = 'ACTIVE'")
+				.param(tenantId.value()).param(bookingId).update();
 	}
 
 	private static OffsetDateTime at(java.time.Instant instant) {

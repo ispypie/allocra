@@ -79,6 +79,8 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-BKG-005 | Confirm only if fully feasible | VERIFIED | app | `ConfirmBookingService` (hard-req + engine re-check) | BKG-AT-004 | app `BookingSliceIT` | |
 | PRD-BKG-006 | Revalidate in txn; 409 on conflict | VERIFIED | app/reservations | `ConfirmBookingService`, `GlobalExceptionHandler` (409) | BKG-AT-004, RSV-AT-002 | app `BookingSliceIT.concurrentConfirmsOnlyOneSucceeds` | |
 | PRD-BKG-007 | Booking holds | DEFERRED | bookings | — | — | — | Future |
+| PRD-BKG-008 | Cancel releases reservations; slot rebookable | VERIFIED | app | `BookingLifecycleService.cancel`, `BookingWriteRepository.releaseReservations` | BKG-AT-007 | app `BookingSliceIT.cancelReleasesReservationsAndFreesSlot` | BOOKING_CANCEL |
+| PRD-BKG-009 | COMPLETED / NO_SHOW transitions | VERIFIED | app | `BookingLifecycleService.complete/noShow` (guarded from CONFIRMED) | BKG-AT-008 | app `BookingSliceIT.completeAndNoShowAndInvalidTransition` | BOOKING_UPDATE |
 | PRD-ASN-001 | ResourceAssignment binds resource→requirement | VERIFIED | bookings/app | `ResourceAssignment`, `resource_assignment` table | BKG-AT-004 | app `BookingSliceIT` | |
 | PRD-ASN-002 | Assignment change keeps booking identity | IMPLEMENTED | bookings | assignments are separate rows from `booking` (ADR-003) | BKG-AT-005 | app `BookingSliceIT` | Reassignment endpoint later |
 | PRD-ASN-003 | AssignmentPolicy (behaviour deferred) | DEFERRED | reservations | — | — | — | |

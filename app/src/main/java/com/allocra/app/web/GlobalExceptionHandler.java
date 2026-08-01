@@ -1,6 +1,7 @@
 package com.allocra.app.web;
 
 import com.allocra.common.error.InfeasibleBookingException;
+import com.allocra.common.error.InvalidBookingStateException;
 import com.allocra.common.error.NotAuthorizedException;
 import com.allocra.common.error.ReservationConflictException;
 import com.allocra.common.error.ResourceNotFoundException;
@@ -26,6 +27,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(InfeasibleBookingException.class)
 	public ProblemDetail onInfeasible(InfeasibleBookingException e) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+	}
+
+	@ExceptionHandler(InvalidBookingStateException.class)
+	public ProblemDetail onInvalidState(InvalidBookingStateException e) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
 	}
 
 	@ExceptionHandler(NotAuthorizedException.class)
