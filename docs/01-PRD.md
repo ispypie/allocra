@@ -169,6 +169,9 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
   may not) be combined (e.g. equipment usable in a given room).
 - **PRD-RES-009** *(ACCEPTED)* `AttributeDefinition` allows tenant-defined structured
   attributes on resources/capabilities without a dynamic meta-model or rules engine.
+- **PRD-RES-010** *(ACCEPTED)* Locations, resource types and resources (with capabilities,
+  compatibility and mobility) can be **created via the API** by a user with the
+  `RESOURCE_MANAGE` permission; all are tenant-scoped. *(AT: RES-AT-006)*
 
 ### 7.5 Services & requirements (`SVC`)
 
@@ -190,6 +193,9 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
   *(AT: SCH-AT-001, SCH-AT-002)*
 - **PRD-SVC-007** *(DEFERRED)* Complex supervision rules and qualification alternatives.
   → `06-FUTURE-IDEAS.md`.
+- **PRD-SVC-008** *(ACCEPTED)* Service types (with their requirements) can be **created via
+  the API** by a user with the `SERVICE_MANAGE` permission; creation returns the generated
+  requirement ids so a client can reference them when booking. Tenant-scoped. *(AT: SVC-AT-002)*
 
 ### 7.6 Availability (`AVL`)
 
@@ -200,6 +206,8 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-AVL-003** *(ACCEPTED)* Effective availability is the intersection of a resource's
   availability with the absence of blocks and the absence of conflicting reservations.
   *(AT: AVL-AT-001)*
+- **PRD-AVL-004** *(ACCEPTED)* Availability rules can be **created via the API** for a
+  resource by a user with the `AVAILABILITY_MANAGE` permission; tenant-scoped. *(AT: AVL-AT-002)*
 
 ### 7.7 Scheduling / candidate search (`SCH`)
 
@@ -405,6 +413,8 @@ is cross-referenced. Initial acceptance criteria:
 | BKG-AT-009 | A booking can be retrieved by id with its assignments; unknown id → 404 | PRD-BKG-010 |
 | BKG-AT-010 | Bookings can be listed for the active tenant, optionally filtered by status | PRD-BKG-011 |
 | BKG-AT-011 | A booking can be rescheduled: old slot freed, new slot reserved, identity kept; taken slot rejected | PRD-BKG-012 |
+| RES-AT-006 | Locations, resource types and resources can be created via the API (RESOURCE_MANAGE) | PRD-RES-010 |
+| SVC-AT-002 | A service with requirements can be created via the API; a configured service can then be booked | PRD-SVC-008, PRD-AVL-004 |
 | RSV-AT-001 | A reserved resource is excluded from conflicting options; overlap rejected | PRD-RSV-002/004 |
 | RSV-AT-002 | Concurrent confirmations for the same resource → only one succeeds | PRD-RSV-004 |
 | SCH-AT-005 | Scheduling services hold no mutable authoritative calendar state | PRD-SCH-001, PRD-NFR-001 |

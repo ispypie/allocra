@@ -51,6 +51,7 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-RES-007 | Movable/pooled model (subset in slice) | DEFERRED | resources | — | — | — | OQ-BUF-1 |
 | PRD-RES-008 | ResourceCompatibility | PLANNED | resources | _tbd_ | RES-AT-004 | _tbd_ | |
 | PRD-RES-009 | AttributeDefinition (bounded) | PLANNED | resources | _tbd_ | — | — | |
+| PRD-RES-010 | Create locations/types/resources via API | VERIFIED | app | `ConfigController`, `ConfigService`, `ConfigWriteRepository` | RES-AT-006 | app `ConfigAndBookIT.configureThenBook` | RESOURCE_MANAGE |
 | PRD-SVC-001 | ServiceType defines requirements | VERIFIED | services/app | `service_type`/`resource_requirement`, `CatalogRepository` | — | app `BookingSliceIT` | |
 | PRD-SVC-002 | Requirement describes what, not who | IMPLEMENTED | scheduling | `RequirementSpec`, `DirectAvailabilitySearch` | RES-AT-002 | scheduling `DirectAvailabilitySearchTest.roomCapabilitiesAreMatched` | Domain-verified |
 | PRD-SVC-003 | Required vs optional requirements | IMPLEMENTED | scheduling | `RequirementSpec.required`, engine skip logic | SVC-AT-001 | scheduling `DirectAvailabilitySearchTest.optionalEquipmentIsHandled` | Domain-verified |
@@ -58,8 +59,10 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-SVC-005 | Staff selection REQUIRED/PREFERRED/ANY | IMPLEMENTED | scheduling | `SelectionMode`, `RequirementSpec.allows/prefers` | SCH-AT-003/004 | scheduling `DirectAvailabilitySearchTest.requiredStaffIsEnforced/preferredStaffIsRankedHigher` | Domain-verified |
 | PRD-SVC-006 | Qualification matching + expiry/validity | IMPLEMENTED | scheduling | `CapabilityRequirement`, `CapabilitySpec.validOn` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` (qualified/unqualified/expired/minLevel) | Domain-verified |
 | PRD-SVC-007 | Supervision/qualification alternatives | DEFERRED | services | — | — | — | Future |
+| PRD-SVC-008 | Create services (+requirements) via API | VERIFIED | app | `ConfigController.createService`, `ConfigService` | SVC-AT-002 | app `ConfigAndBookIT.configureThenBook` | SERVICE_MANAGE |
 | PRD-AVL-001 | AvailabilityRule | VERIFIED | availability/app | `availability_rule`; expanded by `CandidateRepository` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest`; app `BookingSliceIT` | OQ-AVL-1 |
 | PRD-AVL-002 | BlockedAvailability | IMPLEMENTED | availability/app | `blocked_availability`; applied by `CandidateRepository` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest` | |
+| PRD-AVL-004 | Create availability rules via API | VERIFIED | app | `ConfigController.createAvailabilityRule`, `ConfigService` | AVL-AT-002 | app `ConfigAndBookIT.configureThenBook` | AVAILABILITY_MANAGE |
 | PRD-AVL-003 | Availability = rules ∩ ¬blocks ∩ ¬reservations | IMPLEMENTED | scheduling | `ResourceCandidate.availableFor` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest.availabilityIsIntersectionOfRulesBlocksAndReservations` | Domain-verified |
 | PRD-SCH-001 | Stateless engine; immutable snapshot | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (no fields), `SchedulingSnapshot` (immutable) | SCH-AT-005 | scheduling `DirectAvailabilitySearchTest.engineIsStateless`; app `ArchitectureTest` | Domain-verified |
 | PRD-SCH-002 | Hard constraints enumerated | IMPLEMENTED | scheduling | `DirectAvailabilitySearch.isFeasible` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` | Domain-verified |
