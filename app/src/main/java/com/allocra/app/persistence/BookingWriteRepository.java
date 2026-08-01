@@ -5,6 +5,7 @@ import com.allocra.bookings.ResourceAssignment;
 import com.allocra.common.error.ReservationConflictException;
 import com.allocra.common.tenant.TenantId;
 import com.allocra.reservations.Reservation;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -106,7 +107,16 @@ public class BookingWriteRepository {
 				.param(tenantId.value()).param(bookingId).update();
 	}
 
-	private static OffsetDateTime at(java.time.Instant instant) {
+	/**
+	 * Moves a booking to a new time window (reschedule; the booking id is
+	 * unchanged, PRD-ASN-002).
+	 */
+	public void updateSlot(TenantId tenantId, UUID bookingId, Instant startAt, Instant endAt) {
+		jdbc.sql("UPDATE booking SET start_at = ?, end_at = ? WHERE tenant_id = ? AND id = ?").param(at(startAt))
+				.param(at(endAt)).param(tenantId.value()).param(bookingId).update();
+	}
+
+	private static OffsetDateTime at(Instant instant) {
 		return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
 	}
 }

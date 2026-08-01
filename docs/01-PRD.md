@@ -272,8 +272,9 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-BKG-012** *(ACCEPTED)* A `CONFIRMED` booking may be **rescheduled** to a new time by a
   user with the `BOOKING_RESCHEDULE` permission. The booking **keeps its identity**
   (PRD-ASN-002); its existing reservations are released and new reservations created
-  **atomically** — a conflict at the new time returns a conflict response and leaves the
-  booking unchanged (PRD-RSV-004). *(AT: BKG-AT-011)*
+  **atomically** — a new time whose resources are unavailable is rejected and leaves the
+  booking unchanged (422 if the slot is already taken; 409 on a concurrent race, PRD-RSV-004).
+  *(AT: BKG-AT-011)*
 
 ### 7.10 Assignments & policies (`ASN`)
 
@@ -403,7 +404,7 @@ is cross-referenced. Initial acceptance criteria:
 | BKG-AT-008 | A confirmed booking can be marked COMPLETED or NO_SHOW; invalid transitions rejected | PRD-BKG-009 |
 | BKG-AT-009 | A booking can be retrieved by id with its assignments; unknown id → 404 | PRD-BKG-010 |
 | BKG-AT-010 | Bookings can be listed for the active tenant, optionally filtered by status | PRD-BKG-011 |
-| BKG-AT-011 | A booking can be rescheduled: old slot freed, new slot reserved, identity kept; conflict → 409 | PRD-BKG-012 |
+| BKG-AT-011 | A booking can be rescheduled: old slot freed, new slot reserved, identity kept; taken slot rejected | PRD-BKG-012 |
 | RSV-AT-001 | A reserved resource is excluded from conflicting options; overlap rejected | PRD-RSV-002/004 |
 | RSV-AT-002 | Concurrent confirmations for the same resource → only one succeeds | PRD-RSV-004 |
 | SCH-AT-005 | Scheduling services hold no mutable authoritative calendar state | PRD-SCH-001, PRD-NFR-001 |

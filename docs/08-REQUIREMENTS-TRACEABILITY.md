@@ -83,7 +83,7 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-BKG-009 | COMPLETED / NO_SHOW transitions | VERIFIED | app | `BookingLifecycleService.complete/noShow` (guarded from CONFIRMED) | BKG-AT-008 | app `BookingSliceIT.completeAndNoShowAndInvalidTransition` | BOOKING_UPDATE |
 | PRD-BKG-010 | Retrieve booking by id with assignments | VERIFIED | app | `BookingQueryService.get`, `BookingReadRepository.findById` | BKG-AT-009 | app `BookingSliceIT.getBookingReturnsAssignments` | BOOKING_VIEW |
 | PRD-BKG-011 | List bookings for active tenant (status filter) | VERIFIED | app | `BookingQueryService.list`, `BookingReadRepository.list` | BKG-AT-010 | app `BookingSliceIT.listBookings` | BOOKING_VIEW |
-| PRD-BKG-012 | Reschedule keeps identity; atomic release+reserve | PLANNED | app | _tbd_ (RescheduleService) | BKG-AT-011 | _tbd_ | Next increment |
+| PRD-BKG-012 | Reschedule keeps identity; atomic release+reserve | VERIFIED | app | `RescheduleBookingService` (@Transactional), `BookingWriteRepository.updateSlot` | BKG-AT-011 | app `BookingSliceIT.rescheduleMovesBookingAndFreesOldSlot` | BOOKING_RESCHEDULE |
 | PRD-ASN-001 | ResourceAssignment binds resource→requirement | VERIFIED | bookings/app | `ResourceAssignment`, `resource_assignment` table | BKG-AT-004 | app `BookingSliceIT` | |
 | PRD-ASN-002 | Assignment change keeps booking identity | IMPLEMENTED | bookings | assignments are separate rows from `booking` (ADR-003) | BKG-AT-005 | app `BookingSliceIT` | Reassignment endpoint later |
 | PRD-ASN-003 | AssignmentPolicy (behaviour deferred) | DEFERRED | reservations | — | — | — | |

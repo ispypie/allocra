@@ -9,6 +9,7 @@ import com.allocra.app.web.ApiModel.AssignmentDto;
 import com.allocra.app.web.ApiModel.BookingDto;
 import com.allocra.app.web.ApiModel.BookingListResponse;
 import com.allocra.app.web.ApiModel.ConfirmRequest;
+import com.allocra.app.web.ApiModel.RescheduleRequest;
 import com.allocra.app.web.ApiModel.SearchRequest;
 import com.allocra.app.web.ApiModel.SearchResponse;
 import com.allocra.app.web.ApiModel.SubjectDto;
@@ -299,7 +300,40 @@ class BookingSliceIT {
 		assertThat(confirmed.bookings()).allMatch(b -> b.status().equals("CONFIRMED"));
 	}
 
+	@Test
+	@DisplayName("PRD-BKG-012 / BKG-AT-011: rescheduling moves the booking (identity kept), frees the old slot, and rejects a taken new slot")
+	void rescheduleMovesBookingAndFreesOldSlot() throws Exception {
+		// Isolated early slots (08:00, 09:00) not used by other tests.
+		UUID bookingId = confirmBooking(at(8, 0));
+
+		// A viewer cannot reschedule.
+		assertThat(post("/v1/bookings/" + bookingId + "/reschedule", "viewer", TENANT_A, rescheduleBody(at(9, 0)))
+				.statusCode()).isEqualTo(403);
+
+		// Reschedule 08:00 → 09:00 keeps the same booking id.
+		assertThat(post("/v1/bookings/" + bookingId + "/reschedule", "sched", TENANT_A, rescheduleBody(at(9, 0)))
+				.statusCode()).isEqualTo(200);
+		BookingDto moved = json.readValue(get("/v1/bookings/" + bookingId, "sched", TENANT_A).body(), BookingDto.class);
+		assertThat(moved.start()).isEqualTo(at(9, 0));
+
+		// The old 08:00 slot is free again and can be booked by another booking.
+		UUID blocker = confirmBooking(at(8, 0));
+		assertThat(blocker).isNotEqualTo(bookingId);
+
+		// Rescheduling onto the now-taken 08:00 slot is rejected; the booking is left
+		// unchanged.
+		assertThat(post("/v1/bookings/" + bookingId + "/reschedule", "sched", TENANT_A, rescheduleBody(at(8, 0)))
+				.statusCode()).isEqualTo(422);
+		BookingDto unchanged = json.readValue(get("/v1/bookings/" + bookingId, "sched", TENANT_A).body(),
+				BookingDto.class);
+		assertThat(unchanged.start()).isEqualTo(at(9, 0));
+	}
+
 	// --- helpers ---
+
+	private static String rescheduleBody(Instant start) throws Exception {
+		return json.writeValueAsString(new RescheduleRequest(start));
+	}
 
 	private static HttpResponse<String> get(String path, String bearer, UUID tenant) throws Exception {
 		HttpRequest req = HttpRequest.newBuilder(URI.create(base() + path)).header("Authorization", "Bearer " + bearer)

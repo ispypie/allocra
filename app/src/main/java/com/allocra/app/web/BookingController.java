@@ -4,6 +4,7 @@ import com.allocra.app.application.BookingLifecycleService;
 import com.allocra.app.application.BookingQueryService;
 import com.allocra.app.application.ConfirmBookingService;
 import com.allocra.app.application.ConfirmBookingService.ConfirmCommand;
+import com.allocra.app.application.RescheduleBookingService;
 import com.allocra.app.persistence.BookingReadRepository.BookingView;
 import com.allocra.app.web.ApiModel.BookingAssignmentDto;
 import com.allocra.app.web.ApiModel.BookingDto;
@@ -11,6 +12,7 @@ import com.allocra.app.web.ApiModel.BookingListResponse;
 import com.allocra.app.web.ApiModel.BookingSummaryDto;
 import com.allocra.app.web.ApiModel.ConfirmRequest;
 import com.allocra.app.web.ApiModel.ConfirmResponse;
+import com.allocra.app.web.ApiModel.RescheduleRequest;
 import com.allocra.app.web.ApiModel.SubjectDto;
 import com.allocra.bookings.BookingStatus;
 import com.allocra.bookings.BookingSubject;
@@ -45,12 +47,14 @@ public class BookingController {
 	private final ConfirmBookingService confirmService;
 	private final BookingLifecycleService lifecycleService;
 	private final BookingQueryService queryService;
+	private final RescheduleBookingService rescheduleService;
 
 	public BookingController(ConfirmBookingService confirmService, BookingLifecycleService lifecycleService,
-			BookingQueryService queryService) {
+			BookingQueryService queryService, RescheduleBookingService rescheduleService) {
 		this.confirmService = confirmService;
 		this.lifecycleService = lifecycleService;
 		this.queryService = queryService;
+		this.rescheduleService = rescheduleService;
 	}
 
 	@PostMapping
@@ -102,6 +106,13 @@ public class BookingController {
 			@RequestAttribute(TenantAuthFilter.MEMBERSHIP_ATTRIBUTE) Membership membership) {
 		lifecycleService.noShow(TenantContext.require(), membership, bookingId);
 		return new ConfirmResponse(bookingId, BookingStatus.NO_SHOW.name());
+	}
+
+	@PostMapping("/{bookingId}/reschedule")
+	public ConfirmResponse reschedule(@PathVariable UUID bookingId, @RequestBody RescheduleRequest request,
+			@RequestAttribute(TenantAuthFilter.MEMBERSHIP_ATTRIBUTE) Membership membership) {
+		rescheduleService.reschedule(TenantContext.require(), membership, bookingId, request.start());
+		return new ConfirmResponse(bookingId, BookingStatus.CONFIRMED.name());
 	}
 
 	private static BookingDto toDto(BookingView b) {
