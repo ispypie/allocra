@@ -36,12 +36,15 @@ class ApplicationSmokeIT {
 	@Test
 	@DisplayName("PRD-NFR-002/003: application boots on PostgreSQL and liveness/readiness report UP")
 	void applicationBootsAndProbesAreHealthy() throws Exception {
-		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(AllocraApplication.class)
-				.properties("server.port=0", "management.endpoint.health.probes.enabled=true",
-						"spring.datasource.url=" + POSTGRES.getJdbcUrl(),
-						"spring.datasource.username=" + POSTGRES.getUsername(),
-						"spring.datasource.password=" + POSTGRES.getPassword())
-				.run()) {
+		// Pass overrides as command-line args (higher precedence than application.yml,
+		// unlike
+		// SpringApplicationBuilder.properties(), which sets lowest-precedence
+		// defaults).
+		try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(AllocraApplication.class).run(
+				"--server.port=0", "--management.endpoint.health.probes.enabled=true",
+				"--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
+				"--spring.datasource.username=" + POSTGRES.getUsername(),
+				"--spring.datasource.password=" + POSTGRES.getPassword())) {
 
 			int port = ((ServletWebServerApplicationContext) ctx).getWebServer().getPort();
 			HttpClient client = HttpClient.newHttpClient();
