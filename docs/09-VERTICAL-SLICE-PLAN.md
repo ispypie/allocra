@@ -1,8 +1,10 @@
 # 09 — Thin Vertical Slice Plan (Deliverable C)
 
-**Status:** DESIGN — for review. Per Milestone 1 §19 Deliverable C, this slice is designed
-here and **not implemented until the plan is reviewed**. It deliberately stays inside the
-current milestone and the accepted defaults (ADR-006, `07-OPEN-QUESTIONS.md`).
+**Status:** IMPLEMENTED — this design has been built and verified end-to-end in CI against
+real PostgreSQL (see `docs/08-REQUIREMENTS-TRACEABILITY.md` and the slice test suites). The
+two open decisions were resolved as: local stub `TokenVerifier` (DEC-020) and buffers
+deferred (DEC-021). Persistence uses `JdbcClient` (DEC-022); slice infra lives in `app`
+(DEC-023). The design below stands as the record of what was built.
 
 ## 1. Goal
 

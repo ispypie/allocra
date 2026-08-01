@@ -1,8 +1,11 @@
 # 10 — Acceptance Test Plan (Deliverable D)
 
-**Status:** PLAN — for review, alongside `docs/09-VERTICAL-SLICE-PLAN.md`. Maps the first
-vertical slice to PRD requirements and the acceptance tests that will drive it. Tests are
-written **before/with** implementation (TDD; `03-TECHNICAL-SPECIFICATION.md` §8).
+**Status:** LARGELY EXECUTED — the slice acceptance tests below are implemented and green in
+CI, except where marked deferred (`RES-AT-005`, DEC-021). Actual test classes:
+`scheduling.DirectAvailabilitySearchTest` (domain), `app.it.BookingSliceIT` (flow/tenant/
+permission/auth/concurrency), `app.it.ReservationSchemaIT` (exclusion constraint),
+`app.it.MigrationIT`/`ApplicationSmokeIT`. See `docs/08-REQUIREMENTS-TRACEABILITY.md` for the
+per-requirement mapping.
 
 **Conventions:** every acceptance test's `@DisplayName` carries both the PRD id and the AT
 id (e.g. `PRD-BKG-004 / BKG-AT-004: …`). Test types: **D** = pure domain test, **A** =

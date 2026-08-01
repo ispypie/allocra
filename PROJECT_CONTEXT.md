@@ -48,14 +48,24 @@ it **without redesign**, but no public UI is built in this phase.
   documentation validation). **CI is green** on JDK 21 (build job: unit + ArchUnit + doc +
   Testcontainers integration tests + Spotless; static-analysis job: SpotBugs). Repo:
   `github.com/ispypie/allocra` (private). See `README.md`.
-- **Deliverable C — thin vertical slice *plan*: DONE (design, awaiting review).** See
-  [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md). Slice code is **not**
-  written until the plan is reviewed.
-- **Deliverable D — acceptance test plan: DONE.** See
-  [docs/10-ACCEPTANCE-TEST-PLAN.md](docs/10-ACCEPTANCE-TEST-PLAN.md).
+- **Deliverable C — thin vertical slice: DONE and IMPLEMENTED (CI green).** Design in
+  [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md). The internal booking flow
+  is built and verified end-to-end against real PostgreSQL: schema migrations V2–V8 with the
+  reservation exclusion constraint (ADR-004); the pure scheduling engine; tenant-scoped
+  JdbcClient persistence; transactional `ConfirmBookingService`; REST API with a
+  `TokenVerifier` port + local stub (DEC-020) and membership-validated tenant resolution.
+- **Deliverable D — acceptance test plan: DONE and largely EXECUTED.** See
+  [docs/10-ACCEPTANCE-TEST-PLAN.md](docs/10-ACCEPTANCE-TEST-PLAN.md). Verified in CI:
+  SCH-AT-001..005, RES-AT-001/002/004, SVC-AT-001, AVL-AT-001, RSV-AT-001/002, BKG-AT-004/006,
+  TEN-AT-002, MEM-AT-001, SEC-001. Deferred: RES-AT-005 (buffers, DEC-021).
 
-Next action awaiting the maintainer: **review Deliverables C & D**, resolve the two open
-decisions (buffers in-slice? real Firebase filter in-slice?), then implement the slice TDD.
+Persistence uses **Spring `JdbcClient`** (not JPA) for explicit tenant-scoped SQL and native
+PG features (DEC-022). Slice infrastructure (persistence/application/web) currently lives in
+the `app` module against pure domain types in each module; extracting per-module hexagonal
+adapters is a documented follow-up (see [docs/06-FUTURE-IDEAS.md](docs/06-FUTURE-IDEAS.md)).
+
+Next candidate work: booking lifecycle endpoints (cancel/complete/no-show), config/admin
+APIs, then the public self-service channel — all beyond the current milestone.
 
 **We are not implementing the full product.** Do not build broad functionality until
 the foundation plan is reviewed.

@@ -31,8 +31,11 @@ link to its replacement.
 
 | DEC-020 | Slice authentication | Pluggable auth-verification **port** (in `identity`) with a **local stub verifier** for tests/local dev; real Firebase adapter deferred behind a non-local profile. Keeps the slice fully locally runnable; Firebase SDK stays out of the domain | ACCEPTED | 2026-08-01 | PRD-IDN-001, PRD-SEC-001, OQ-AUTH-1 | ADR-010 |
 | DEC-021 | Buffers deferred from slice | The first slice reserves exact `[start, start+duration)` windows; setup/cleanup buffers (PRD-SCH-006, RES-AT-005) deferred to the next milestone to keep the slice thin | ACCEPTED | 2026-08-01 | PRD-SCH-006, OQ-BUF-1 | ADR-006 |
+| DEC-022 | Persistence via Spring JdbcClient | Use Spring `JdbcClient` with explicit tenant-scoped SQL (not JPA) for the slice, to keep tenant scoping explicit and use native PG features (generated `tstzrange`, exclusion constraint). Within the tech spec's "JPA/JDBC" allowance | ACCEPTED | 2026-08-01 | PRD-TEN-003, PRD-NFR-005 | ADR-002, ADR-004 |
+| DEC-023 | Slice infrastructure centralised in `app` | For the first slice, persistence/application/web adapters live in the `app` module against pure domain types owned by each module; per-module hexagonal adapters are a documented follow-up. Load-bearing invariants (scheduling purity, tenant isolation, booking/assignment/reservation separation) are preserved and ArchUnit-enforced | ACCEPTED | 2026-08-01 | PRD-NFR-007 | ADR-001 |
 
 ## Change log
 - 2026-08-01 — Initial register created with DEC-001..018 during Milestone 1 Deliverable A.
 - 2026-08-01 — Added DEC-019 (engineering quality gates) during Milestone 1 Deliverable B.
 - 2026-08-01 — Added DEC-020 (slice auth: stub verifier) and DEC-021 (buffers deferred) at start of slice implementation.
+- 2026-08-01 — Added DEC-022 (JdbcClient persistence) and DEC-023 (slice infra centralised in app) during slice implementation.
