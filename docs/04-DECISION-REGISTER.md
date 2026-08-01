@@ -29,6 +29,10 @@ link to its replacement.
 | DEC-018 | No Redis / microservices / Kafka / CQRS / event-sourcing / rules-engine | Excluded initially; require an accepted ADR to introduce | ACCEPTED | 2026-08-01 | PRD-NFR-001 | ADR-006 |
 | DEC-019 | Engineering quality gates | Formatting via Spotless (Eclipse JDT formatter, portable across JDKs); static analysis via SpotBugs (opt-in `-Pquality`, run in CI on JDK 21); structured logging via Spring Boot built-in ECS format in the `cloud` profile; integration tests split as failsafe `*IT` | ACCEPTED | 2026-08-01 | PRD-NFR-004/006/007/008 | ADR-007 |
 
+| DEC-020 | Slice authentication | Pluggable auth-verification **port** (in `identity`) with a **local stub verifier** for tests/local dev; real Firebase adapter deferred behind a non-local profile. Keeps the slice fully locally runnable; Firebase SDK stays out of the domain | ACCEPTED | 2026-08-01 | PRD-IDN-001, PRD-SEC-001, OQ-AUTH-1 | ADR-010 |
+| DEC-021 | Buffers deferred from slice | The first slice reserves exact `[start, start+duration)` windows; setup/cleanup buffers (PRD-SCH-006, RES-AT-005) deferred to the next milestone to keep the slice thin | ACCEPTED | 2026-08-01 | PRD-SCH-006, OQ-BUF-1 | ADR-006 |
+
 ## Change log
 - 2026-08-01 — Initial register created with DEC-001..018 during Milestone 1 Deliverable A.
 - 2026-08-01 — Added DEC-019 (engineering quality gates) during Milestone 1 Deliverable B.
+- 2026-08-01 — Added DEC-020 (slice auth: stub verifier) and DEC-021 (buffers deferred) at start of slice implementation.

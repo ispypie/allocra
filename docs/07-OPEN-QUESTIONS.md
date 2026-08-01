@@ -18,8 +18,8 @@ so work is not blocked.
 | OQ-AVL-1 | Availability rule model: RRULE/iCal recurrence vs simple weekly templates + exceptions? | Start with weekly templates + `BlockedAvailability` exceptions; defer full recurrence. | ASSUMED | Medium — model shape; keep rule storage flexible. |
 | OQ-TIME-1 | Time zone handling for bookings across locations? | Store instants in UTC (`timestamptz`); resolve display/booking-window in the tenant/location time zone; ranges use `tstzrange`. | ASSUMED | Medium — get right early; encoded in tech spec. |
 | OQ-SVC-1 | Do multiple resources per requirement (quantity > 1) ship in the slice? | Quantity fixed at 1 for the slice; model allows quantity for later. | ASSUMED | Low. |
-| OQ-BUF-1 | Are setup/cleanup buffers in the first vertical slice or deferred? | Model supports buffers; slice implements only what its acceptance tests need (RES-AT-005 planned); may fold in during slice review. | ASSUMED | Low. |
-| OQ-AUTH-1 | Local-dev auth: Firebase Auth emulator vs stub verifier profile? | Support both; default `local` profile uses a stub verifier; emulator optional. Never in prod. | ASSUMED | Low. |
+| OQ-BUF-1 | Are setup/cleanup buffers in the first vertical slice or deferred? | **RESOLVED: deferred.** The slice uses exact `[start, start+duration)` reservation windows; RES-AT-005 moves to the next milestone (DEC-021). | RESOLVED | Low. |
+| OQ-AUTH-1 | Local-dev auth: Firebase Auth emulator vs stub verifier profile? | **RESOLVED: pluggable auth-verification port with a local stub verifier** (DEC-020). Tests and local dev use the stub; the real Firebase adapter is deferred behind a non-local profile. Keeps the whole slice locally runnable without Firebase infra. | RESOLVED | Low. |
 | OQ-API-1 | Idempotency for confirmation requests (client retries)? | Out of slice; recommend idempotency key before public/API channel. | OPEN | Medium (future). |
 
 ## Assumptions currently in force (summary)

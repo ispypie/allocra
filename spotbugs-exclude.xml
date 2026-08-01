@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusions. EI_EXPOSE_REP / EI_EXPOSE_REP2 fire on value records that hold
+  collections; ours defensively copy inputs to immutable collections in their compact
+  constructors, so these reports are noise. Keep this file small and justified.
+-->
+<FindBugsFilter>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+  </Match>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+  </Match>
+</FindBugsFilter>

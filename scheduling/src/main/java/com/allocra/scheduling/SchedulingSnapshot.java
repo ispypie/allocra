@@ -1,19 +1,49 @@
 package com.allocra.scheduling;
 
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 /**
- * Marker for the immutable input to the scheduling engine.
+ * The immutable input to the scheduling engine (PRD-SCH-001). It carries
+ * everything needed to compute candidate options — the request window and
+ * service duration, the service's requirements, and the candidate resources per
+ * requirement (with their capabilities, availability, blocks and existing
+ * reservations) — captured as immutable data. The engine reads a snapshot and
+ * returns ranked candidates without mutating anything.
  *
  * <p>
- * A snapshot carries everything the engine needs to compute candidate options —
- * the service's requirements and constraints, the candidate resources with
- * their capabilities, availability and existing reservations in the requested
- * window — captured as immutable domain inputs. The engine reads a snapshot and
- * returns ranked candidates without touching any aggregate (PRD-SCH-001).
+ * The application layer builds a snapshot from tenant-scoped repositories; the
+ * engine never touches HTTP, JPA or Firebase (ADR-001, enforced by
+ * ArchitectureTest).
  *
- * <p>
- * Concrete snapshot fields are defined in the vertical slice (Deliverable C).
- * This interface exists now to anchor the engine's boundary and the
- * architecture tests.
+ * @param requestWindow
+ *            the window within which to search (already clamped to the horizon)
+ * @param serviceDuration
+ *            the nominal duration of the service being booked
+ * @param requirements
+ *            the service's resource requirements
+ * @param candidatesByRequirement
+ *            candidate resources keyed by requirement id
+ * @param parameters
+ *            search tuning (increment, result cap)
  */
-public interface SchedulingSnapshot {
+public record SchedulingSnapshot(Interval requestWindow, Duration serviceDuration, List<RequirementSpec> requirements,
+		Map<String, List<ResourceCandidate>> candidatesByRequirement, SearchParameters parameters) {
+
+	public SchedulingSnapshot {
+		Objects.requireNonNull(requestWindow, "requestWindow");
+		Objects.requireNonNull(serviceDuration, "serviceDuration");
+		if (serviceDuration.isZero() || serviceDuration.isNegative()) {
+			throw new IllegalArgumentException("serviceDuration must be positive");
+		}
+		requirements = List.copyOf(requirements);
+		candidatesByRequirement = Map.copyOf(candidatesByRequirement);
+		Objects.requireNonNull(parameters, "parameters");
+	}
+
+	List<ResourceCandidate> candidatesFor(RequirementSpec requirement) {
+		return candidatesByRequirement.getOrDefault(requirement.requirementId(), List.of());
+	}
 }

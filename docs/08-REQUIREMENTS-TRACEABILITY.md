@@ -35,29 +35,31 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-MEM-002 | Initial roles | PLANNED | membership | _tbd_ | — | — | |
 | PRD-MEM-003 | Permission-based authz (no role-name checks) | PLANNED | membership | _tbd_ | MEM-AT-001 | _tbd_ | |
 | PRD-MEM-004 | Membership/permission validated per action | PLANNED | membership | _tbd_ | MEM-AT-001 | _tbd_ | |
-| PRD-RES-001 | Generic Resource; no per-type schedulers | PLANNED | resources/scheduling | _tbd_ | RES-AT-001 | ArchUnit (planned) | ADR-001 |
+| PRD-RES-001 | Generic Resource; no per-type schedulers | IN_PROGRESS | scheduling | `DirectAvailabilitySearch` (operates on `BaseKind`, never concrete types) | RES-AT-001 | scheduling `DirectAvailabilitySearchTest` | Engine domain done; persistence next |
 | PRD-RES-002 | Resource has type + BaseResourceKind | PLANNED | resources | _tbd_ | — | — | |
-| PRD-RES-003 | New type schedulable, no engine change | PLANNED | resources/scheduling | _tbd_ | RES-AT-001 | _tbd_ | |
-| PRD-RES-004 | ResourceCapability | PLANNED | resources | _tbd_ | SCH-AT-001 | _tbd_ | |
+| PRD-RES-003 | New type schedulable, no engine change | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` | RES-AT-001 | scheduling `DirectAvailabilitySearchTest.newResourceTypeIsSchedulable` | Domain-verified |
+| PRD-RES-006 | EquipmentMobility incl. FIXED→room (compat) | IN_PROGRESS | scheduling | `ResourceCandidate.compatibleWith` | RES-AT-004 | scheduling `DirectAvailabilitySearchTest.fixedEquipmentConstrainedToCompatibleRoom` | Mobility enum in persistence next |
+| PRD-RES-008 | ResourceCompatibility | IMPLEMENTED | scheduling | `ResourceCandidate.compatibleWith` | RES-AT-004 | scheduling `DirectAvailabilitySearchTest.fixedEquipmentConstrainedToCompatibleRoom` | Domain-verified |
+| PRD-RES-004 | ResourceCapability | IN_PROGRESS | scheduling/resources | `CapabilitySpec` (engine); persistence pending | SCH-AT-001 | scheduling `DirectAvailabilitySearchTest` | Persisted capability next |
 | PRD-RES-005 | Profiles via composition | PLANNED | resources | _tbd_ | — | ArchUnit (planned) | No deep inheritance |
 | PRD-RES-006 | EquipmentMobility incl. FIXED→room | PLANNED | resources | _tbd_ | RES-AT-004 | _tbd_ | |
 | PRD-RES-007 | Movable/pooled model (subset in slice) | DEFERRED | resources | — | — | — | OQ-BUF-1 |
 | PRD-RES-008 | ResourceCompatibility | PLANNED | resources | _tbd_ | RES-AT-004 | _tbd_ | |
 | PRD-RES-009 | AttributeDefinition (bounded) | PLANNED | resources | _tbd_ | — | — | |
 | PRD-SVC-001 | ServiceType defines requirements | PLANNED | services | _tbd_ | — | — | |
-| PRD-SVC-002 | Requirement describes what, not who | PLANNED | services | _tbd_ | RES-AT-002 | _tbd_ | |
-| PRD-SVC-003 | Required vs optional requirements | PLANNED | services | _tbd_ | SVC-AT-001 | _tbd_ | |
-| PRD-SVC-004 | Hard/soft constraints; hard by default | PLANNED | services/scheduling | _tbd_ | RES-AT-002 | _tbd_ | |
-| PRD-SVC-005 | Staff selection REQUIRED/PREFERRED/ANY | PLANNED | services/scheduling | _tbd_ | SCH-AT-003/004 | _tbd_ | |
-| PRD-SVC-006 | Qualification matching + expiry/validity | PLANNED | scheduling | _tbd_ | SCH-AT-001/002 | _tbd_ | |
+| PRD-SVC-002 | Requirement describes what, not who | IMPLEMENTED | scheduling | `RequirementSpec`, `DirectAvailabilitySearch` | RES-AT-002 | scheduling `DirectAvailabilitySearchTest.roomCapabilitiesAreMatched` | Domain-verified |
+| PRD-SVC-003 | Required vs optional requirements | IMPLEMENTED | scheduling | `RequirementSpec.required`, engine skip logic | SVC-AT-001 | scheduling `DirectAvailabilitySearchTest.optionalEquipmentIsHandled` | Domain-verified |
+| PRD-SVC-004 | Hard/soft constraints; hard by default | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (hard filter + soft score) | RES-AT-002 | scheduling `DirectAvailabilitySearchTest` | Domain-verified |
+| PRD-SVC-005 | Staff selection REQUIRED/PREFERRED/ANY | IMPLEMENTED | scheduling | `SelectionMode`, `RequirementSpec.allows/prefers` | SCH-AT-003/004 | scheduling `DirectAvailabilitySearchTest.requiredStaffIsEnforced/preferredStaffIsRankedHigher` | Domain-verified |
+| PRD-SVC-006 | Qualification matching + expiry/validity | IMPLEMENTED | scheduling | `CapabilityRequirement`, `CapabilitySpec.validOn` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` (qualified/unqualified/expired/minLevel) | Domain-verified |
 | PRD-SVC-007 | Supervision/qualification alternatives | DEFERRED | services | — | — | — | Future |
 | PRD-AVL-001 | AvailabilityRule | PLANNED | availability | _tbd_ | AVL-AT-001 | _tbd_ | OQ-AVL-1 |
 | PRD-AVL-002 | BlockedAvailability | PLANNED | availability | _tbd_ | AVL-AT-001 | _tbd_ | |
-| PRD-AVL-003 | Availability = rules ∩ ¬blocks ∩ ¬reservations | PLANNED | scheduling | _tbd_ | AVL-AT-001 | _tbd_ | |
-| PRD-SCH-001 | Stateless engine; immutable snapshot | PLANNED | scheduling | _tbd_ | SCH-AT-005 | ArchUnit (planned) | ADR-001 |
-| PRD-SCH-002 | Hard constraints enumerated | PLANNED | scheduling | _tbd_ | SCH-AT-001/002 | _tbd_ | |
-| PRD-SCH-003 | Soft constraints rank | PLANNED | scheduling | _tbd_ | SCH-AT-004 | _tbd_ | |
-| PRD-SCH-004 | Direct search never reassigns | PLANNED | scheduling | _tbd_ | BKG-AT-006 | _tbd_ | |
+| PRD-AVL-003 | Availability = rules ∩ ¬blocks ∩ ¬reservations | IMPLEMENTED | scheduling | `ResourceCandidate.availableFor` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest.availabilityIsIntersectionOfRulesBlocksAndReservations` | Domain-verified |
+| PRD-SCH-001 | Stateless engine; immutable snapshot | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (no fields), `SchedulingSnapshot` (immutable) | SCH-AT-005 | scheduling `DirectAvailabilitySearchTest.engineIsStateless`; app `ArchitectureTest` | Domain-verified |
+| PRD-SCH-002 | Hard constraints enumerated | IMPLEMENTED | scheduling | `DirectAvailabilitySearch.isFeasible` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` | Domain-verified |
+| PRD-SCH-003 | Soft constraints rank | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (preferred bonus + sort) | SCH-AT-004 | scheduling `DirectAvailabilitySearchTest.preferredStaffIsRankedHigher` | Domain-verified |
+| PRD-SCH-004 | Direct search never reassigns | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (reservations block, never freed) | BKG-AT-006 | scheduling `DirectAvailabilitySearchTest.directSearchNeverReassignsExistingReservation` | Domain-verified |
 | PRD-SCH-005 | Simple search: horizon/increment/limit | PLANNED | scheduling | _tbd_ | — | — | OQ-SCH-1 |
 | PRD-SCH-006 | Buffers extend consumption window | PLANNED | scheduling/reservations | _tbd_ | RES-AT-005 | _tbd_ | OQ-BUF-1 |
 | PRD-SCH-007 | Schedule repair | DEFERRED | scheduling | — | — | — | DEC-014 |
@@ -75,7 +77,7 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-ASN-001 | ResourceAssignment binds resource→requirement | PLANNED | bookings/reservations | _tbd_ | BKG-AT-004 | _tbd_ | |
 | PRD-ASN-002 | Assignment change keeps booking identity | PLANNED | bookings | _tbd_ | BKG-AT-005 | _tbd_ | |
 | PRD-ASN-003 | AssignmentPolicy (behaviour deferred) | DEFERRED | reservations | — | — | — | |
-| PRD-ASN-004 | Search never silently reassigns | PLANNED | scheduling | _tbd_ | BKG-AT-006 | _tbd_ | |
+| PRD-ASN-004 | Search never silently reassigns | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (read-only; reservations block) | BKG-AT-006 | scheduling `DirectAvailabilitySearchTest.directSearchNeverReassignsExistingReservation` | Domain-verified |
 | PRD-RSV-001 | Reservation prevents conflicting use | PLANNED | reservations | _tbd_ | RSV-AT-001 | _tbd_ | |
 | PRD-RSV-002 | Resources exclusive by default | PLANNED | reservations | _tbd_ | RSV-AT-001 | _tbd_ | |
 | PRD-RSV-003 | One reservation per exclusive resource | PLANNED | reservations | _tbd_ | BKG-AT-004 | _tbd_ | |
