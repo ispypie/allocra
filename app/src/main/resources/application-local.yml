@@ -1,0 +1,6 @@
+# Local development profile: run with SPRING_PROFILES_ACTIVE=local
+# Plain (human-readable) console logging and verbose health details for convenience.
+management:
+  endpoint:
+    health:
+      show-details: always

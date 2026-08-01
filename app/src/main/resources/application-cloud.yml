@@ -1,0 +1,12 @@
+# Cloud Run profile: run with SPRING_PROFILES_ACTIVE=cloud
+# Structured (ECS JSON) logging for ingestion by Cloud Logging (PRD-NFR-004). Never logs
+# secrets, tokens or unnecessary PII (PRD-SEC-004).
+logging:
+  structured:
+    format:
+      console: ecs
+
+management:
+  endpoint:
+    health:
+      show-details: never

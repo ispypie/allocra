@@ -27,6 +27,8 @@ link to its replacement.
 | DEC-016 | Booking holds | Deferred until self-service requires them | DEFERRED | 2026-08-01 | PRD-BKG-007 | ADR-005 |
 | DEC-017 | Capacity/pooled resources | Model shape permitted; behaviour deferred; exclusivity not weakened globally | DEFERRED | 2026-08-01 | PRD-RSV-006, PRD-RES-007 | ADR-006 |
 | DEC-018 | No Redis / microservices / Kafka / CQRS / event-sourcing / rules-engine | Excluded initially; require an accepted ADR to introduce | ACCEPTED | 2026-08-01 | PRD-NFR-001 | ADR-006 |
+| DEC-019 | Engineering quality gates | Formatting via Spotless (Eclipse JDT formatter, portable across JDKs); static analysis via SpotBugs (opt-in `-Pquality`, run in CI on JDK 21); structured logging via Spring Boot built-in ECS format in the `cloud` profile; integration tests split as failsafe `*IT` | ACCEPTED | 2026-08-01 | PRD-NFR-004/006/007/008 | ADR-007 |
 
 ## Change log
 - 2026-08-01 — Initial register created with DEC-001..018 during Milestone 1 Deliverable A.
+- 2026-08-01 — Added DEC-019 (engineering quality gates) during Milestone 1 Deliverable B.

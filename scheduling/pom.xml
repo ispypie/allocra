@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.allocra</groupId>
+    <artifactId>allocra-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>scheduling</artifactId>
+  <name>Allocra :: scheduling</name>
+  <description>Pure scheduling engine. Operates on immutable snapshots; no HTTP, Spring MVC, JPA or Firebase (ADR-001, PRD-SCH-001).</description>
+
+  <dependencies>
+    <!--
+      Intentionally minimal. The scheduling engine consumes domain inputs / immutable
+      snapshots only. Do NOT add Spring Web, JPA/Hibernate or Firebase dependencies here —
+      the boundary is enforced by ArchitectureTest (PRD-NFR-007).
+    -->
+    <dependency>
+      <groupId>com.allocra</groupId>
+      <artifactId>common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

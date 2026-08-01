@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.allocra</groupId>
+  <artifactId>allocra-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Allocra (parent)</name>
+  <description>Multi-tenant resource scheduling platform — modular monolith reactor</description>
+
+  <!--
+    Architecture: modular monolith (see docs/03-TECHNICAL-SPECIFICATION.md).
+    Module boundaries are ALSO enforced by ArchUnit (see app/src/test ArchitectureTest),
+    not by this reactor alone. Dependency direction follows docs/02-DOMAIN-MODEL.md.
+  -->
+  <modules>
+    <module>common</module>
+    <module>identity</module>
+    <module>tenancy</module>
+    <module>membership</module>
+    <module>resources</module>
+    <module>services</module>
+    <module>availability</module>
+    <module>scheduling</module>
+    <module>bookings</module>
+    <module>reservations</module>
+    <module>audit</module>
+    <module>app</module>
+  </modules>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+
+    <!-- Managed plugin/dependency versions (ADR-009) -->
+    <spring-boot.version>3.4.1</spring-boot.version>
+    <archunit.version>1.3.0</archunit.version>
+
+    <spotless-maven-plugin.version>2.44.0</spotless-maven-plugin.version>
+    <spotbugs-maven-plugin.version>4.8.6.4</spotbugs-maven-plugin.version>
+    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Spring Boot BOM manages Spring, JPA, Flyway, PostgreSQL driver, Testcontainers, JUnit, etc. -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- ArchUnit is not managed by the Spring Boot BOM -->
+      <dependency>
+        <groupId>com.tngtech.archunit</groupId>
+        <artifactId>archunit-junit5</artifactId>
+        <version>${archunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Internal modules -->
+      <dependency><groupId>com.allocra</groupId><artifactId>common</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>identity</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>tenancy</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>membership</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>resources</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>services</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>availability</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>scheduling</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>bookings</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>reservations</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.allocra</groupId><artifactId>audit</artifactId><version>${project.version}</version></dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <release>${maven.compiler.release}</release>
+            <parameters>true</parameters>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <!-- Unit + architecture + documentation tests. Integration tests (*IT) are excluded here. -->
+            <excludes>
+              <exclude>**/*IT.java</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${maven-failsafe-plugin.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring-boot.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>${spotbugs-maven-plugin.version}</version>
+          <configuration>
+            <effort>Max</effort>
+            <threshold>Medium</threshold>
+            <includeTests>false</includeTests>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <!-- Formatting enforced across every module (ADR: Deliverable B engineering standards).
+           `mvn spotless:apply` formats; the `check` goal fails the build on unformatted code. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-maven-plugin.version}</version>
+        <configuration>
+          <java>
+            <!-- Eclipse JDT formatter: self-contained and portable across JDKs (unlike
+                 google/palantir formatters, which reach into jdk.compiler internals). -->
+            <eclipse/>
+            <importOrder/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <id>spotless-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!--
+      Static analysis (SpotBugs) is opt-in via `-Pquality` so the default build stays fast
+      and robust. CI runs `mvn -Pquality verify` (see .github/workflows/ci.yml).
+    -->
+    <profile>
+      <id>quality</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

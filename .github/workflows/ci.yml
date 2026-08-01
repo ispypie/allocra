@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Core build: compile, unit + architecture + documentation-validation tests (surefire),
+  # Testcontainers integration tests (failsafe — Docker is available on ubuntu-latest) and
+  # the Spotless formatting check. This is the gate that must always pass.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'   # matches ADR-009 (build/runtime target)
+          cache: maven
+      - name: Build, test and verify
+        run: ./mvnw -B verify
+
+  # Static analysis (SpotBugs). Separate job on JDK 21 so the core build is not blocked by
+  # analysis tooling, and because SpotBugs cannot run on very new JDKs yet.
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: SpotBugs
+        run: ./mvnw -B -Pquality -DskipTests -DskipITs verify

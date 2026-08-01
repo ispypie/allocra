@@ -1,10 +1,9 @@
 # Maven
 target/
-!.mvn/wrapper/maven-wrapper.jar
 .mvn/timing.properties
-.mvn/wrapper/maven-wrapper.properties
 dependency-reduced-pom.xml
 buildNumber.properties
+# NOTE: the Maven wrapper (mvnw, mvnw.cmd, .mvn/wrapper/*) IS committed on purpose.
 
 # Java
 *.class

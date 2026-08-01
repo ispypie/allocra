@@ -8,19 +8,21 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 **Implementation status values:** `PLANNED`, `IN_PROGRESS`, `IMPLEMENTED`, `VERIFIED`,
 `DEFERRED`, `SUPERSEDED`.
 
-> **Current state:** Milestone 1 Deliverable A (documentation) complete. No product code
-> exists yet, so all functional requirements are `PLANNED` or `DEFERRED`. The columns are
-> pre-populated with the intended module, planned acceptance test id and (where known) the
-> planned integration test, so implementation work slots straight in.
+> **Current state:** Milestone 1 Deliverables A (documentation) and B (engineering
+> foundation) complete. Foundation/non-functional requirements now have real
+> implementations and tests (see the matrix and the "Deliverable B" summary below).
+> Functional (domain) requirements remain `PLANNED`/`DEFERRED` until the vertical slice
+> (Deliverable C); their columns are pre-populated with the intended module and planned
+> test ids so implementation work slots straight in.
 
 ## Traceability matrix
 
 | PRD ID | Summary | Status | Module | Source location | Acceptance test | Test location | Notes |
 |--------|---------|--------|--------|-----------------|-----------------|---------------|-------|
-| PRD-TEN-001 | Tenant is root of tenant-owned data | PLANNED | tenancy | _tbd_ | — | — | Foundational |
-| PRD-TEN-002 | `tenant_id` on all tenant-owned data | PLANNED | all | _tbd_ (migrations) | TEN-AT-001 | _tbd_ | Enforced in schema |
-| PRD-TEN-003 | Tenant-scoped repository methods | PLANNED | common/all | _tbd_ | TEN-AT-001 | _tbd_ | ArchUnit convention |
-| PRD-TEN-004 | Never trust client tenant id | PLANNED | membership/identity | _tbd_ | TEN-AT-002 | _tbd_ | With PRD-SEC-002 |
+| PRD-TEN-001 | Tenant is root of tenant-owned data | IN_PROGRESS | tenancy | `db/migration/V1__baseline.sql` (`tenant` table) | — | app `MigrationIT` | Aggregate/repo in the slice |
+| PRD-TEN-002 | `tenant_id` on all tenant-owned data | PLANNED | all | migrations (baseline only so far) | TEN-AT-001 | _tbd_ | Per-table with the slice |
+| PRD-TEN-003 | Tenant-scoped repository methods | IN_PROGRESS | common | `TenantId`, `TenantContext` | TEN-AT-001 | common `TenantContextTest` | Repos added with the slice |
+| PRD-TEN-004 | Never trust client tenant id | IN_PROGRESS | common/membership | `TenantContext` (resolved, not client-trusted) | TEN-AT-002 | common `TenantContextTest` | Filter/validation in the slice |
 | PRD-TEN-005 | Tenant-scoped uniqueness incl. tenant_id | PLANNED | all | _tbd_ (migrations) | — | _tbd_ | |
 | PRD-TEN-006 | Composite FKs incl. tenant discriminator | PLANNED | all | _tbd_ (migrations) | TEN-AT-001 | ReservationCrossTenantIntegrationTest (planned) | |
 | PRD-TEN-007 | Cross-tenant isolation tested | PLANNED | all | _tbd_ | TEN-AT-001/002 | _tbd_ | |
@@ -81,15 +83,15 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-RSV-005 | Search advisory; conflict at confirm | PLANNED | bookings | _tbd_ | RSV-AT-002 | _tbd_ | |
 | PRD-RSV-006 | Capacity/pooled model | DEFERRED | reservations | — | — | — | Future |
 | PRD-AUD-001 | AuditEvent for key actions | PLANNED | audit | _tbd_ | — | — | |
-| PRD-NFR-001 | Stateless, horizontally scalable | PLANNED | app/scheduling | _tbd_ | SCH-AT-005 | _tbd_ | |
-| PRD-NFR-002 | Cloud Run deployable | PLANNED | app | _tbd_ | — | — | Deliverable B |
-| PRD-NFR-003 | Health/liveness/readiness | PLANNED | app | _tbd_ | — | — | Deliverable B |
-| PRD-NFR-004 | Structured logging | PLANNED | app | _tbd_ | — | — | Deliverable B |
-| PRD-NFR-005 | Flyway migrations, tested | PLANNED | app/db | _tbd_ | — | MigrationIntegrationTest (planned) | Deliverable B |
-| PRD-NFR-006 | Testcontainers for DB tests | PLANNED | (test) | _tbd_ | — | — | Deliverable B |
-| PRD-NFR-007 | ArchUnit boundary rules | PLANNED | (test) | _tbd_ | — | ArchitectureTest (planned) | Deliverable B |
-| PRD-NFR-008 | CI incl. doc validation | PLANNED | ci | _tbd_ | — | DocumentationValidationTest (planned) | Deliverable B |
-| PRD-NFR-009 | Java 21 + Spring Boot 3.x | PLANNED | app | _tbd_ | — | — | ADR-009 |
+| PRD-NFR-001 | Stateless, horizontally scalable | IN_PROGRESS | app/scheduling/common | common `TenantContext` (per-request only); scheduling `SchedulingSnapshot` | SCH-AT-005 | ArchitectureTest | Full validation with the slice |
+| PRD-NFR-002 | Cloud Run deployable | IMPLEMENTED | app | `Dockerfile`, `application.yml` (`PORT`, graceful shutdown), `application-cloud.yml` | — | ApplicationSmokeIT | |
+| PRD-NFR-003 | Health/liveness/readiness | VERIFIED | app | `application.yml` (actuator probes) | — | app `ApplicationSmokeIT` | Probes assert UP against Testcontainers |
+| PRD-NFR-004 | Structured logging | IMPLEMENTED | app | `application-cloud.yml` (`logging.structured.format.console=ecs`) | — | — | Config-only; no automated assertion |
+| PRD-NFR-005 | Flyway migrations, tested | VERIFIED | app | `db/migration/V1__baseline.sql` | — | app `MigrationIT` | btree_gist + tenant table asserted |
+| PRD-NFR-006 | Testcontainers for DB tests | VERIFIED | app (test) | `MigrationIT`, `ApplicationSmokeIT` | — | those tests | |
+| PRD-NFR-007 | ArchUnit boundary rules | VERIFIED | app (test) | `ArchitectureTest` (4 rules) | — | app `ArchitectureTest` | scheduling purity + app-dep rule |
+| PRD-NFR-008 | CI incl. doc validation | VERIFIED | ci / app (test) | `.github/workflows/ci.yml`, `DocumentationValidationTest` | — | app `DocumentationValidationTest` | |
+| PRD-NFR-009 | Java 21 + Spring Boot 3.x | IMPLEMENTED | (build) | root `pom.xml` (`release 21`, Spring Boot 3.4.1) | — | — | |
 | PRD-SEC-001 | Authenticated requests | PLANNED | identity | _tbd_ | — | — | |
 | PRD-SEC-002 | Active tenant from membership | PLANNED | membership | _tbd_ | TEN-AT-002 | _tbd_ | |
 | PRD-SEC-003 | Permission-based authz, auditable denials | PLANNED | membership/audit | _tbd_ | MEM-AT-001 | _tbd_ | |

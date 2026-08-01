@@ -39,9 +39,15 @@ it **without redesign**, but no public UI is built in this phase.
 ## Current milestone
 
 **Milestone 1 — Project elaboration & foundation.**
-- **Deliverable A — documentation: DONE (this delivery).**
-- Deliverable B — repository & engineering foundation: *not started*.
-- Deliverable C — thin vertical slice *plan* (design, not full implementation): *not started*.
+- **Deliverable A — documentation: DONE.**
+- **Deliverable B — repository & engineering foundation: DONE.** Maven multi-module
+  reactor (12 modules), Spring Boot 3.4 bootstrap, PostgreSQL + Flyway (`V1` baseline with
+  `btree_gist` + `tenant`), Testcontainers ITs, JUnit, ArchUnit boundary tests, Spotless
+  formatting, SpotBugs (opt-in `-Pquality`), actuator health/liveness/readiness, structured
+  logging (cloud profile), Cloud Run `Dockerfile`, and GitHub Actions CI (incl.
+  documentation validation). `mvn package` and `mvn -DskipITs verify` are green locally;
+  Testcontainers ITs and SpotBugs run in CI on JDK 21. See `README.md`.
+- Deliverable C — thin vertical slice *plan* (design, not full implementation): *next*.
 - Deliverable D — acceptance test plan: *not started*.
 
 **We are not implementing the full product.** Do not build broad functionality until
