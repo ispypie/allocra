@@ -6,6 +6,8 @@ import com.allocra.app.AllocraApplication;
 import com.allocra.app.application.ConfirmBookingService;
 import com.allocra.app.application.ConfirmBookingService.ConfirmCommand;
 import com.allocra.app.web.ApiModel.AssignmentDto;
+import com.allocra.app.web.ApiModel.BookingDto;
+import com.allocra.app.web.ApiModel.BookingListResponse;
 import com.allocra.app.web.ApiModel.ConfirmRequest;
 import com.allocra.app.web.ApiModel.SearchRequest;
 import com.allocra.app.web.ApiModel.SearchResponse;
@@ -266,7 +268,44 @@ class BookingSliceIT {
 				.isEqualTo(404);
 	}
 
+	@Test
+	@DisplayName("PRD-BKG-010 / BKG-AT-009: a booking can be retrieved by id with its assignments; unknown id is 404")
+	void getBookingReturnsAssignments() throws Exception {
+		UUID bookingId = confirmBooking(at(16, 0));
+
+		HttpResponse<String> response = get("/v1/bookings/" + bookingId, "sched", TENANT_A);
+		assertThat(response.statusCode()).isEqualTo(200);
+		BookingDto dto = json.readValue(response.body(), BookingDto.class);
+		assertThat(dto.status()).isEqualTo("CONFIRMED");
+		assertThat(dto.assignments()).hasSize(2);
+
+		// A viewer (BOOKING_VIEW) may read; an unknown id is 404.
+		assertThat(get("/v1/bookings/" + bookingId, "viewer", TENANT_A).statusCode()).isEqualTo(200);
+		assertThat(get("/v1/bookings/" + UUID.randomUUID(), "sched", TENANT_A).statusCode()).isEqualTo(404);
+	}
+
+	@Test
+	@DisplayName("PRD-BKG-011 / BKG-AT-010: bookings can be listed for the active tenant, optionally filtered by status")
+	void listBookings() throws Exception {
+		UUID bookingId = confirmBooking(at(17, 0));
+
+		BookingListResponse all = json.readValue(get("/v1/bookings", "sched", TENANT_A).body(),
+				BookingListResponse.class);
+		assertThat(all.bookings()).anyMatch(b -> b.id().equals(bookingId));
+
+		BookingListResponse confirmed = json.readValue(get("/v1/bookings?status=CONFIRMED", "sched", TENANT_A).body(),
+				BookingListResponse.class);
+		assertThat(confirmed.bookings()).anyMatch(b -> b.id().equals(bookingId));
+		assertThat(confirmed.bookings()).allMatch(b -> b.status().equals("CONFIRMED"));
+	}
+
 	// --- helpers ---
+
+	private static HttpResponse<String> get(String path, String bearer, UUID tenant) throws Exception {
+		HttpRequest req = HttpRequest.newBuilder(URI.create(base() + path)).header("Authorization", "Bearer " + bearer)
+				.header("X-Tenant-Id", tenant.toString()).GET().build();
+		return HTTP.send(req, HttpResponse.BodyHandlers.ofString());
+	}
 
 	private static UUID confirmBooking(Instant start) throws Exception {
 		HttpResponse<String> response = post("/v1/bookings", "sched", TENANT_A, confirmBody(start));

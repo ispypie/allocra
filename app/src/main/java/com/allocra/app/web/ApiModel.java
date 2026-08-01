@@ -42,4 +42,25 @@ public final class ApiModel {
 
 	public record ConfirmResponse(UUID bookingId, String status) {
 	}
+
+	// --- booking reads ---
+
+	public record BookingDto(UUID id, UUID serviceTypeId, SubjectDto subject, Instant start, Instant end, String status,
+			String channel, List<BookingAssignmentDto> assignments) {
+	}
+
+	public record BookingAssignmentDto(UUID requirementId, UUID resourceId, String policy) {
+	}
+
+	public record BookingSummaryDto(UUID id, UUID serviceTypeId, String subjectDisplayName, Instant start, Instant end,
+			String status, String channel) {
+	}
+
+	public record BookingListResponse(List<BookingSummaryDto> bookings) {
+	}
+
+	// --- reschedule ---
+
+	public record RescheduleRequest(Instant start) {
+	}
 }
