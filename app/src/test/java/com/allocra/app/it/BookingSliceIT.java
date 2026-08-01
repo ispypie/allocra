@@ -1,0 +1,254 @@
+package com.allocra.app.it;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.allocra.app.AllocraApplication;
+import com.allocra.app.application.ConfirmBookingService;
+import com.allocra.app.application.ConfirmBookingService.ConfirmCommand;
+import com.allocra.app.web.ApiModel.AssignmentDto;
+import com.allocra.app.web.ApiModel.ConfirmRequest;
+import com.allocra.app.web.ApiModel.SearchRequest;
+import com.allocra.app.web.ApiModel.SearchResponse;
+import com.allocra.app.web.ApiModel.SubjectDto;
+import com.allocra.bookings.BookingSubject;
+import com.allocra.common.tenant.TenantId;
+import com.allocra.membership.Membership;
+import com.allocra.membership.Role;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.testcontainers.containers.PostgreSQLContainer;
+
+/**
+ * End-to-end slice test against real PostgreSQL: the internal booking flow
+ * (authenticated search + confirm), tenant isolation, permission checks and
+ * concurrency. The app is booted programmatically (see
+ * {@link ApplicationSmokeIT} for why) and driven over HTTP; the true
+ * concurrency race is exercised via the transactional service bean.
+ */
+class BookingSliceIT {
+
+	@SuppressWarnings("resource")
+	private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+
+	private static ConfigurableApplicationContext ctx;
+	private static JdbcClient jdbc;
+	private static ObjectMapper json;
+	private static int port;
+	private static final HttpClient HTTP = HttpClient.newHttpClient();
+
+	private static final UUID TENANT_A = UUID.randomUUID();
+	private static final UUID TENANT_B = UUID.randomUUID();
+	private static final UUID USER_SCHED = UUID.randomUUID();
+	private static final UUID MEMBER_SCHED = UUID.randomUUID();
+	private static final UUID S1 = UUID.randomUUID();
+	private static final UUID R1 = UUID.randomUUID();
+	private static final UUID SERVICE = UUID.randomUUID();
+	private static final UUID STAFF_REQ = UUID.randomUUID();
+	private static final UUID ROOM_REQ = UUID.randomUUID();
+
+	private static final LocalDate DATE = LocalDate.of(2026, 9, 7);
+
+	@BeforeAll
+	static void boot() {
+		POSTGRES.start();
+		ctx = new SpringApplicationBuilder(AllocraApplication.class).run("--server.port=0",
+				"--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
+				"--spring.datasource.username=" + POSTGRES.getUsername(),
+				"--spring.datasource.password=" + POSTGRES.getPassword());
+		port = ((ServletWebServerApplicationContext) ctx).getWebServer().getPort();
+		jdbc = ctx.getBean(JdbcClient.class);
+		json = ctx.getBean(ObjectMapper.class);
+		seed();
+	}
+
+	@AfterAll
+	static void shutdown() {
+		if (ctx != null) {
+			ctx.close();
+		}
+		POSTGRES.stop();
+	}
+
+	private static void seed() {
+		int dow = DATE.getDayOfWeek().getValue();
+		ins("INSERT INTO tenant(id,slug,display_name) VALUES(?,?,?)", TENANT_A, "acme-a", "Acme A");
+		ins("INSERT INTO tenant(id,slug,display_name) VALUES(?,?,?)", TENANT_B, "acme-b", "Acme B");
+		ins("INSERT INTO application_user(id,firebase_uid,display_name) VALUES(?,?,?)", USER_SCHED, "sched", "Sam");
+		UUID userViewer = UUID.randomUUID();
+		ins("INSERT INTO application_user(id,firebase_uid,display_name) VALUES(?,?,?)", userViewer, "viewer", "Vic");
+		ins("INSERT INTO organisation_member(tenant_id,id,user_id,status) VALUES(?,?,?,?)", TENANT_A, MEMBER_SCHED,
+				USER_SCHED, "ACTIVE");
+		ins("INSERT INTO organisation_member_role(tenant_id,member_id,role) VALUES(?,?,?)", TENANT_A, MEMBER_SCHED,
+				"SCHEDULER");
+		UUID memberViewer = UUID.randomUUID();
+		ins("INSERT INTO organisation_member(tenant_id,id,user_id,status) VALUES(?,?,?,?)", TENANT_A, memberViewer,
+				userViewer, "ACTIVE");
+		ins("INSERT INTO organisation_member_role(tenant_id,member_id,role) VALUES(?,?,?)", TENANT_A, memberViewer,
+				"VIEWER");
+
+		UUID staffType = UUID.randomUUID();
+		UUID roomType = UUID.randomUUID();
+		ins("INSERT INTO resource_type(tenant_id,id,code,base_kind) VALUES(?,?,?,?)", TENANT_A, staffType, "STAFF",
+				"PERSON");
+		ins("INSERT INTO resource_type(tenant_id,id,code,base_kind) VALUES(?,?,?,?)", TENANT_A, roomType, "ROOM",
+				"PLACE");
+		ins("INSERT INTO resource(tenant_id,id,resource_type_id,name) VALUES(?,?,?,?)", TENANT_A, S1, staffType,
+				"Sam Physio");
+		ins("INSERT INTO resource(tenant_id,id,resource_type_id,name) VALUES(?,?,?,?)", TENANT_A, R1, roomType,
+				"Room 1");
+		ins("INSERT INTO resource_capability(tenant_id,id,resource_id,capability_type) VALUES(?,?,?,?)", TENANT_A,
+				UUID.randomUUID(), S1, "PHYSIO");
+		for (UUID r : List.of(S1, R1)) {
+			ins("INSERT INTO availability_rule(tenant_id,id,resource_id,day_of_week,start_time,end_time) VALUES(?,?,?,?,?,?)",
+					TENANT_A, UUID.randomUUID(), r, dow, LocalTime.of(8, 0), LocalTime.of(18, 0));
+		}
+		ins("INSERT INTO service_type(tenant_id,id,code,name,duration_minutes) VALUES(?,?,?,?,?)", TENANT_A, SERVICE,
+				"TREAT", "Treatment", 60);
+		ins("INSERT INTO resource_requirement(tenant_id,id,service_type_id,base_kind,required,selection_mode,required_capability_type) VALUES(?,?,?,?,?,?,?)",
+				TENANT_A, STAFF_REQ, SERVICE, "PERSON", Boolean.TRUE, "ANY", "PHYSIO");
+		ins("INSERT INTO resource_requirement(tenant_id,id,service_type_id,base_kind,required,selection_mode) VALUES(?,?,?,?,?,?)",
+				TENANT_A, ROOM_REQ, SERVICE, "PLACE", Boolean.TRUE, "ANY");
+	}
+
+	@Test
+	@DisplayName("PRD-BKG-004 / BKG-AT-004: authenticated search then confirm creates a booking, assignments and reservations; the slot is then taken")
+	void searchThenConfirmThenSlotTaken() throws Exception {
+		Instant start = at(10, 0);
+		SearchResponse search = json.readValue(
+				post("/v1/services/" + SERVICE + "/availability/search", "sched", TENANT_A,
+						json.writeValueAsString(new SearchRequest(at(9, 0), at(12, 0), null))).body(),
+				SearchResponse.class);
+		assertThat(search.options()).isNotEmpty();
+
+		HttpResponse<String> confirm = post("/v1/bookings", "sched", TENANT_A, confirmBody(start));
+		assertThat(confirm.statusCode()).isEqualTo(201);
+		UUID bookingId = UUID.fromString(json.readTree(confirm.body()).get("bookingId").asText());
+
+		assertThat(count("resource_assignment", bookingId)).isEqualTo(2);
+		assertThat(count("reservation", bookingId)).isEqualTo(2);
+
+		// Sequentially re-confirming the same slot is now infeasible (the resources are
+		// reserved).
+		assertThat(post("/v1/bookings", "sched", TENANT_A, confirmBody(start)).statusCode()).isEqualTo(422);
+	}
+
+	@Test
+	@DisplayName("PRD-RSV-004 / RSV-AT-002: concurrent confirmations for the same resource — only one succeeds")
+	void concurrentConfirmsOnlyOneSucceeds() throws Exception {
+		Instant start = at(14, 0);
+		ConfirmBookingService service = ctx.getBean(ConfirmBookingService.class);
+		Membership scheduler = new Membership(TenantId.of(TENANT_A), MEMBER_SCHED, USER_SCHED, Set.of(Role.SCHEDULER));
+		ConfirmCommand command = new ConfirmCommand(SERVICE, start,
+				new BookingSubject("PERSON", "Alex", null, null, null), Map.of(STAFF_REQ, S1, ROOM_REQ, R1));
+
+		ExecutorService pool = Executors.newFixedThreadPool(2);
+		CountDownLatch go = new CountDownLatch(1);
+		Callable<Object> task = () -> {
+			go.await();
+			try {
+				return service.confirm(TenantId.of(TENANT_A), scheduler, command);
+			} catch (RuntimeException e) {
+				return e;
+			}
+		};
+		Future<Object> f1 = pool.submit(task);
+		Future<Object> f2 = pool.submit(task);
+		go.countDown();
+		Object r1 = f1.get();
+		Object r2 = f2.get();
+		pool.shutdown();
+
+		long successes = Stream.of(r1, r2).filter(o -> o instanceof UUID).count();
+		assertThat(successes).isEqualTo(1);
+		// The loser failed (a reservation conflict under a true race, or infeasible if
+		// it saw the winner's row).
+		assertThat(Stream.of(r1, r2).anyMatch(o -> o instanceof RuntimeException)).isTrue();
+		// Exactly one ACTIVE reservation exists for that resource/slot — no double
+		// booking.
+		Integer active = jdbc.sql(
+				"SELECT count(*) FROM reservation WHERE tenant_id=? AND resource_id=? AND status='ACTIVE' AND start_at=?")
+				.params(List.of(TENANT_A, S1, OffsetDateTime.ofInstant(start, ZoneOffset.UTC))).query(Integer.class)
+				.single();
+		assertThat(active).isEqualTo(1);
+	}
+
+	@Test
+	@DisplayName("PRD-TEN-004 / TEN-AT-002: a user acting on a tenant they do not belong to is rejected")
+	void crossTenantRejected() throws Exception {
+		// 'sched' is a member of tenant A only; using tenant B's id must be refused.
+		assertThat(post("/v1/bookings", "sched", TENANT_B, confirmBody(at(16, 0))).statusCode()).isEqualTo(403);
+	}
+
+	@Test
+	@DisplayName("PRD-MEM-004 / MEM-AT-001: a viewer without BOOKING_CREATE cannot confirm")
+	void viewerCannotConfirm() throws Exception {
+		assertThat(post("/v1/bookings", "viewer", TENANT_A, confirmBody(at(17, 0))).statusCode()).isEqualTo(403);
+	}
+
+	@Test
+	@DisplayName("PRD-SEC-001: an unauthenticated request is rejected")
+	void unauthenticatedRejected() throws Exception {
+		HttpRequest req = HttpRequest.newBuilder(URI.create(base() + "/v1/bookings"))
+				.header("X-Tenant-Id", TENANT_A.toString()).header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(confirmBody(at(11, 0)))).build();
+		assertThat(HTTP.send(req, HttpResponse.BodyHandlers.ofString()).statusCode()).isEqualTo(401);
+	}
+
+	// --- helpers ---
+
+	private static String confirmBody(Instant start) throws Exception {
+		return json.writeValueAsString(
+				new ConfirmRequest(SERVICE, start, new SubjectDto("PERSON", "Alex", null, null, null),
+						List.of(new AssignmentDto(STAFF_REQ, S1), new AssignmentDto(ROOM_REQ, R1))));
+	}
+
+	private static Instant at(int hour, int minute) {
+		return DATE.atTime(hour, minute).toInstant(ZoneOffset.UTC);
+	}
+
+	private static HttpResponse<String> post(String path, String bearer, UUID tenant, String body) throws Exception {
+		HttpRequest req = HttpRequest.newBuilder(URI.create(base() + path)).header("Authorization", "Bearer " + bearer)
+				.header("X-Tenant-Id", tenant.toString()).header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(body)).build();
+		return HTTP.send(req, HttpResponse.BodyHandlers.ofString());
+	}
+
+	private static String base() {
+		return "http://localhost:" + port;
+	}
+
+	private static Integer count(String table, UUID bookingId) {
+		return jdbc.sql("SELECT count(*) FROM " + table + " WHERE tenant_id=? AND booking_id=?")
+				.params(List.of(TENANT_A, bookingId)).query(Integer.class).single();
+	}
+
+	private static void ins(String sql, Object... params) {
+		jdbc.sql(sql).params(List.of(params)).update();
+	}
+}
