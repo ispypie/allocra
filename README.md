@@ -35,6 +35,14 @@ Authentication · Testcontainers · Google Cloud Run. Rationale in `docs/adr/`.
 - Unit / architecture / documentation tests are named `*Test` (surefire).
 - Integration tests are named `*IT` (failsafe) and use real PostgreSQL via Testcontainers.
 
+## Try the demo (no Docker)
+
+```bash
+./demo/embedded/run.sh
+```
+Runs the whole backend on an embedded PostgreSQL with seeded data, then prints a cheat sheet.
+Explore it at http://localhost:8080/swagger-ui. See [`demo/`](demo/) for details.
+
 ## Run locally
 
 ```bash

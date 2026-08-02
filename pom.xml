@@ -199,5 +199,17 @@
         </plugins>
       </build>
     </profile>
+
+    <!--
+      The `demo` profile adds the self-contained embedded (no-Docker) demo module. It is NOT
+      part of the default reactor, so normal builds and CI never compile it or download its
+      embedded-Postgres binaries. Run it with: ./demo/embedded/run.sh
+    -->
+    <profile>
+      <id>demo</id>
+      <modules>
+        <module>demo/embedded</module>
+      </modules>
+    </profile>
   </profiles>
 </project>

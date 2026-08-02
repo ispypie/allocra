@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.allocra</groupId>
+    <artifactId>allocra-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>demo-embedded</artifactId>
+  <name>Allocra :: demo (embedded, no Docker)</name>
+  <description>Self-contained demo: runs the app against an embedded PostgreSQL (no Docker) with seeded data.</description>
+
+  <properties>
+    <embedded-postgres.version>2.0.7</embedded-postgres.version>
+    <embedded-postgres-binaries.version>16.2.0</embedded-postgres-binaries.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Pins the embedded PostgreSQL 16 binaries (matches the postgres:16 used in tests). -->
+      <dependency>
+        <groupId>io.zonky.test.postgres</groupId>
+        <artifactId>embedded-postgres-binaries-bom</artifactId>
+        <version>${embedded-postgres-binaries.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.allocra</groupId>
+      <artifactId>app</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Runs a real PostgreSQL from a downloaded binary — no Docker daemon required. -->
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>${embedded-postgres.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.allocra.demo.DemoEmbeddedApplication</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
