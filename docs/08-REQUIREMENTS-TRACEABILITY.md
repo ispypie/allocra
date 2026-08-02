@@ -63,6 +63,12 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-AVL-001 | AvailabilityRule | VERIFIED | availability/app | `availability_rule`; expanded by `CandidateRepository` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest`; app `BookingSliceIT` | OQ-AVL-1 |
 | PRD-AVL-002 | BlockedAvailability | IMPLEMENTED | availability/app | `blocked_availability`; applied by `CandidateRepository` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest` | |
 | PRD-AVL-004 | Create availability rules via API | VERIFIED | app | `ConfigController.createAvailabilityRule`, `ConfigService` | AVL-AT-002 | app `ConfigAndBookIT.configureThenBook` | AVAILABILITY_MANAGE |
+| PRD-AVL-005 | Location operating hours | IN_PROGRESS | app | `V9` schema; `CandidateRepository` effective-availability | AVL-AT-003 | app `BusinessHoursIT` | Building |
+| PRD-AVL-006 | Location closures (full-day) | IN_PROGRESS | app | `V9` schema; `CandidateRepository` | AVL-AT-004 | app `BusinessHoursIT` | Building |
+| PRD-AVL-007 | Location timezone (DST-aware) | IN_PROGRESS | app | `location.timezone`; `CandidateRepository` zone conversion | AVL-AT-003 | app `BusinessHoursIT` | Building |
+| PRD-AVL-008 | Per-person working hours/days | VERIFIED | availability/scheduling | `availability_rule` + `blocked_availability` (staff = PERSON resource) | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest`; app `BookingSliceIT` | Already implemented |
+| PRD-SVC-009 | Service lead/prep time | PLANNED | services | _tbd_ (buffer model) | — | — | Recorded; not built |
+| PRD-RES-012 | Resource setup/cleanup time | PLANNED | resources | _tbd_ (buffer model) | RES-AT-005 | _tbd_ | Recorded; not built |
 | PRD-AVL-003 | Availability = rules ∩ ¬blocks ∩ ¬reservations | IMPLEMENTED | scheduling | `ResourceCandidate.availableFor` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest.availabilityIsIntersectionOfRulesBlocksAndReservations` | Domain-verified |
 | PRD-SCH-001 | Stateless engine; immutable snapshot | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (no fields), `SchedulingSnapshot` (immutable) | SCH-AT-005 | scheduling `DirectAvailabilitySearchTest.engineIsStateless`; app `ArchitectureTest` | Domain-verified |
 | PRD-SCH-002 | Hard constraints enumerated | IMPLEMENTED | scheduling | `DirectAvailabilitySearch.isFeasible` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` | Domain-verified |

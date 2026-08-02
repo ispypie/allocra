@@ -11,6 +11,7 @@ import com.allocra.common.error.NotAuthorizedException;
 import com.allocra.common.tenant.TenantId;
 import com.allocra.membership.Membership;
 import com.allocra.membership.Permission;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +35,28 @@ public class ConfigService {
 	}
 
 	@Transactional
-	public UUID createLocation(TenantId tenantId, Membership membership, String name) {
+	public UUID createLocation(TenantId tenantId, Membership membership, String name, String timezone) {
 		require(membership, Permission.RESOURCE_MANAGE);
 		UUID id = UUID.randomUUID();
-		config.insertLocation(tenantId, id, name);
+		config.insertLocation(tenantId, id, name, timezone == null || timezone.isBlank() ? "UTC" : timezone);
+		return id;
+	}
+
+	@Transactional
+	public UUID createOperatingHours(TenantId tenantId, Membership membership, UUID locationId, int dayOfWeek,
+			LocalTime openTime, LocalTime closeTime) {
+		require(membership, Permission.AVAILABILITY_MANAGE);
+		UUID id = UUID.randomUUID();
+		config.insertOperatingHours(tenantId, id, locationId, dayOfWeek, openTime, closeTime);
+		return id;
+	}
+
+	@Transactional
+	public UUID createClosure(TenantId tenantId, Membership membership, UUID locationId, LocalDate startDate,
+			LocalDate endDate, String reason) {
+		require(membership, Permission.AVAILABILITY_MANAGE);
+		UUID id = UUID.randomUUID();
+		config.insertClosure(tenantId, id, locationId, startDate, endDate, reason);
 		return id;
 	}
 

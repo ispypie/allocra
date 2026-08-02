@@ -20,9 +20,23 @@ public class ConfigWriteRepository {
 		this.jdbc = jdbc;
 	}
 
-	public void insertLocation(TenantId tenantId, UUID id, String name) {
-		jdbc.sql("INSERT INTO location(tenant_id, id, name) VALUES (?,?,?)").params(tenantId.value(), id, name)
+	public void insertLocation(TenantId tenantId, UUID id, String name, String timezone) {
+		jdbc.sql("INSERT INTO location(tenant_id, id, name, timezone) VALUES (?,?,?,?)")
+				.params(tenantId.value(), id, name, timezone).update();
+	}
+
+	public void insertOperatingHours(TenantId tenantId, UUID id, UUID locationId, int dayOfWeek, LocalTime openTime,
+			LocalTime closeTime) {
+		jdbc.sql("INSERT INTO location_operating_hours(tenant_id, id, location_id, day_of_week, open_time, close_time)"
+				+ " VALUES (?,?,?,?,?,?)").params(tenantId.value(), id, locationId, dayOfWeek, openTime, closeTime)
 				.update();
+	}
+
+	public void insertClosure(TenantId tenantId, UUID id, UUID locationId, LocalDate startDate, LocalDate endDate,
+			String reason) {
+		jdbc.sql("INSERT INTO location_closure(tenant_id, id, location_id, start_date, end_date, reason)"
+				+ " VALUES (?,?,?,?,?,?)").param(tenantId.value()).param(id).param(locationId).param(startDate)
+				.param(endDate).param(reason).update();
 	}
 
 	public void insertResourceType(TenantId tenantId, UUID id, String code, String baseKind) {

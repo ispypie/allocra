@@ -17,7 +17,13 @@ public final class ConfigApi {
 	public record IdResponse(UUID id) {
 	}
 
-	public record CreateLocationRequest(String name) {
+	public record CreateLocationRequest(String name, String timezone) {
+	}
+
+	public record CreateOperatingHoursRequest(int dayOfWeek, LocalTime openTime, LocalTime closeTime) {
+	}
+
+	public record CreateClosureRequest(LocalDate startDate, LocalDate endDate, String reason) {
 	}
 
 	public record CreateResourceTypeRequest(String code, String baseKind) {

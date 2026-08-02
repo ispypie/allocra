@@ -172,6 +172,10 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-RES-010** *(ACCEPTED)* Locations, resource types and resources (with capabilities,
   compatibility and mobility) can be **created via the API** by a user with the
   `RESOURCE_MANAGE` permission; all are tenant-scoped. *(AT: RES-AT-006)*
+- **PRD-RES-012** *(ACCEPTED — implementation planned)* A `Resource` (e.g. a room or
+  equipment) may define **setup and cleanup times**; the resource is reserved for
+  `[start − setup, end + cleanup)`, extending the contended window (PRD-SCH-006). Not yet
+  implemented (concrete realisation of the deferred RES-AT-005 / DEC-021).
 
 ### 7.5 Services & requirements (`SVC`)
 
@@ -196,6 +200,9 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-SVC-008** *(ACCEPTED)* Service types (with their requirements) can be **created via
   the API** by a user with the `SERVICE_MANAGE` permission; creation returns the generated
   requirement ids so a client can reference them when booking. Tenant-scoped. *(AT: SVC-AT-002)*
+- **PRD-SVC-009** *(ACCEPTED — implementation planned)* A `ServiceType` may define a **lead /
+  prep time** applied before the appointment; the assigned resources are reserved from
+  `start − lead`. Builds on the buffer model (PRD-SCH-006). Not yet implemented.
 
 ### 7.6 Availability (`AVL`)
 
@@ -208,6 +215,19 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
   *(AT: AVL-AT-001)*
 - **PRD-AVL-004** *(ACCEPTED)* Availability rules can be **created via the API** for a
   resource by a user with the `AVAILABILITY_MANAGE` permission; tenant-scoped. *(AT: AVL-AT-002)*
+- **PRD-AVL-005** *(ACCEPTED)* A `Location` has **operating hours** — a weekly template of
+  open/close times. A slot is bookable only if it falls within the location's operating hours,
+  in addition to the resource's own availability. If a location defines no operating hours, no
+  operating-hours constraint applies. *(AT: AVL-AT-003)*
+- **PRD-AVL-006** *(ACCEPTED)* A `Location` has **closures** — full-day date ranges (e.g.
+  public holidays / one-off closed days) during which nothing at that location is bookable.
+  *(AT: AVL-AT-004)*
+- **PRD-AVL-007** *(ACCEPTED)* A `Location` has a **timezone** (IANA id). Operating hours and
+  closures are interpreted in that timezone (DST-aware); resource availability at a located
+  resource is likewise interpreted in the location's timezone. Partially resolves OQ-TIME-1.
+- **PRD-AVL-008** *(ACCEPTED, already implemented)* Each **person's working hours and days**
+  are modelled as that staff `Resource`'s availability rules (PRD-AVL-001) plus one-off
+  `BlockedAvailability` (PRD-AVL-002); no separate concept is required.
 
 ### 7.7 Scheduling / candidate search (`SCH`)
 
@@ -421,6 +441,8 @@ is cross-referenced. Initial acceptance criteria:
 | BKG-AT-011 | A booking can be rescheduled: old slot freed, new slot reserved, identity kept; taken slot rejected | PRD-BKG-012 |
 | RES-AT-006 | Locations, resource types and resources can be created via the API (RESOURCE_MANAGE) | PRD-RES-010 |
 | SVC-AT-002 | A service with requirements can be created via the API; a configured service can then be booked | PRD-SVC-008, PRD-AVL-004 |
+| AVL-AT-003 | A slot outside the location's operating hours is not offered/bookable | PRD-AVL-005, PRD-AVL-007 |
+| AVL-AT-004 | A slot on a location closure day is not offered/bookable | PRD-AVL-006 |
 | RSV-AT-001 | A reserved resource is excluded from conflicting options; overlap rejected | PRD-RSV-002/004 |
 | RSV-AT-002 | Concurrent confirmations for the same resource → only one succeeds | PRD-RSV-004 |
 | SCH-AT-005 | Scheduling services hold no mutable authoritative calendar state | PRD-SCH-001, PRD-NFR-001 |

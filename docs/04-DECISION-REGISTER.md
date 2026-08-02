@@ -36,6 +36,7 @@ link to its replacement.
 | DEC-024 | Lifecycle outcome permission | Add `BOOKING_UPDATE` permission for COMPLETED/NO_SHOW transitions (distinct from `BOOKING_CANCEL` for cancellation); cancellation releases reservations to free the slot | ACCEPTED | 2026-08-01 | PRD-BKG-008/009, PRD-MEM-003 | — |
 | DEC-025 | API-first, multiple UI clients | One client-agnostic versioned REST/JSON API serves all UI clients (Flutter + React); shared admin API, separate public API for self-service; no per-client BFF; CORS configurable per environment | ACCEPTED | 2026-08-02 | PRD-NFR-010 | ADR-011 |
 | DEC-026 | Publish OpenAPI | Publish an OpenAPI spec (springdoc) so clients generate typed SDKs (TypeScript, Dart) | ACCEPTED | 2026-08-02 | PRD-NFR-011 | ADR-011 |
+| DEC-028 | Business hours at location level, timezone-aware | Operating hours + closures live on `Location` (with an IANA timezone), not tenant, since multi-location is modelled. They are folded into each resource's effective availability at snapshot-build time (DST-aware), so the pure scheduling engine is unchanged | ACCEPTED | 2026-08-02 | PRD-AVL-005/006/007 | ADR-001, ADR-006 |
 | DEC-027 | Self-contained demo environments | Demos live under `demo/<env>/`, each with its own startup script + README. `embedded` (zonky embedded PostgreSQL, no Docker; isolated behind `-Pdemo` so CI/default builds never compile it) and `compose` (Docker: postgres + app, persistent). Both share an idempotent `@Profile("demo")` seeder in the app and are explored via Swagger UI + stub tokens | ACCEPTED | 2026-08-02 | PRD-NFR-002 | ADR-011 |
 
 ## Change log
@@ -44,4 +45,4 @@ link to its replacement.
 - 2026-08-01 — Added DEC-020 (slice auth: stub verifier) and DEC-021 (buffers deferred) at start of slice implementation.
 - 2026-08-01 — Added DEC-022 (JdbcClient persistence) and DEC-023 (slice infra centralised in app) during slice implementation.
 - 2026-08-02 — Added DEC-024 (lifecycle outcome permission), DEC-025 (API-first, multiple UI clients) and DEC-026 (publish OpenAPI).
-- 2026-08-02 — Added DEC-027 (self-contained demo environments; embedded no-Docker demo).
+- 2026-08-02 — Added DEC-027 (self-contained demo environments) and DEC-028 (location-level, timezone-aware business hours).

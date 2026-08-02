@@ -2,7 +2,9 @@ package com.allocra.app.web;
 
 import com.allocra.app.application.ConfigService;
 import com.allocra.app.web.ConfigApi.CreateAvailabilityRuleRequest;
+import com.allocra.app.web.ConfigApi.CreateClosureRequest;
 import com.allocra.app.web.ConfigApi.CreateLocationRequest;
+import com.allocra.app.web.ConfigApi.CreateOperatingHoursRequest;
 import com.allocra.app.web.ConfigApi.CreateResourceRequest;
 import com.allocra.app.web.ConfigApi.CreateResourceTypeRequest;
 import com.allocra.app.web.ConfigApi.CreateServiceRequest;
@@ -41,7 +43,24 @@ public class ConfigController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public IdResponse createLocation(@RequestBody CreateLocationRequest request,
 			@RequestAttribute(TenantAuthFilter.MEMBERSHIP_ATTRIBUTE) Membership membership) {
-		return new IdResponse(config.createLocation(tenant(), membership, request.name()));
+		return new IdResponse(config.createLocation(tenant(), membership, request.name(), request.timezone()));
+	}
+
+	@PostMapping("/locations/{locationId}/operating-hours")
+	@ResponseStatus(HttpStatus.CREATED)
+	public IdResponse createOperatingHours(@PathVariable UUID locationId,
+			@RequestBody CreateOperatingHoursRequest request,
+			@RequestAttribute(TenantAuthFilter.MEMBERSHIP_ATTRIBUTE) Membership membership) {
+		return new IdResponse(config.createOperatingHours(tenant(), membership, locationId, request.dayOfWeek(),
+				request.openTime(), request.closeTime()));
+	}
+
+	@PostMapping("/locations/{locationId}/closures")
+	@ResponseStatus(HttpStatus.CREATED)
+	public IdResponse createClosure(@PathVariable UUID locationId, @RequestBody CreateClosureRequest request,
+			@RequestAttribute(TenantAuthFilter.MEMBERSHIP_ATTRIBUTE) Membership membership) {
+		return new IdResponse(config.createClosure(tenant(), membership, locationId, request.startDate(),
+				request.endDate(), request.reason()));
 	}
 
 	@PostMapping("/resource-types")
