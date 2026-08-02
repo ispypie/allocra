@@ -33,7 +33,8 @@ In Swagger UI, click **Authorize** / use the "Try it out" buttons and add those 
 
 ### A typical tour
 1. `POST /v1/services/{serviceTypeId}/availability/search` — find bookable options.
-2. `POST /v1/bookings` — confirm one (atomic; a clashing slot returns 409).
+2. `POST /v1/bookings` — confirm one (atomic; a clashing/already-taken slot returns **409**,
+   an otherwise-infeasible request — e.g. outside opening hours — returns **422**).
 3. `GET /v1/bookings` and `GET /v1/bookings/{id}` — see what you created.
 4. `POST /v1/bookings/{id}/reschedule`, `/cancel`, `/complete`, `/no-show` — lifecycle.
 5. As `admin`, try the config endpoints (`/v1/resources`, `/v1/services`, …) to build your own.

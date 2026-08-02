@@ -123,8 +123,8 @@ class BufferIT {
 				.query(OffsetDateTime.class).single();
 		assertThat(roomEnd.toInstant()).isEqualTo(Instant.parse("2026-07-06T11:30:00Z"));
 
-		// 11:00–12:00 falls inside the room's cleanup buffer → rejected.
-		assertThat(confirm(Instant.parse("2026-07-06T11:00:00Z")).statusCode()).isEqualTo(422);
+		// 11:00–12:00 falls inside the room's cleanup buffer → reservation clash (409).
+		assertThat(confirm(Instant.parse("2026-07-06T11:00:00Z")).statusCode()).isEqualTo(409);
 
 		// 11:30–12:30 is clear of the buffer → bookable.
 		assertThat(confirm(Instant.parse("2026-07-06T11:30:00Z")).statusCode()).isEqualTo(201);

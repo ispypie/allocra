@@ -279,9 +279,11 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-BKG-005** *(ACCEPTED)* A booking is confirmable only when fully feasible: every
   hard resource requirement has a valid assignment. Partially assigned confirmed bookings
   are unsupported initially. *(AT: BKG-AT-004)*
-- **PRD-BKG-006** *(ACCEPTED)* Confirmation revalidates availability inside the database
-  transaction; if a slot became unavailable, the API returns a clear **conflict** response.
-  *(AT: BKG-AT-004, RSV-AT-002)*
+- **PRD-BKG-006** *(ACCEPTED)* Confirmation revalidates inside the database transaction. Status
+  contract: a **reservation/turnover clash returns 409** (the DB exclusion constraint is the
+  authority, so both sequential and concurrent clashes are 409); a request that is otherwise
+  **infeasible** (no capable resource, outside operating hours, closed day, missing required
+  assignment) returns **422**. *(AT: BKG-AT-004, RSV-AT-002)*
 - **PRD-BKG-007** *(DEFERRED)* Booking holds (temporary reservations pre-confirmation),
   required by self-service. → `06-FUTURE-IDEAS.md`.
 - **PRD-BKG-008** *(ACCEPTED)* A `CONFIRMED` booking may be **cancelled** by a user with the
@@ -301,8 +303,8 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
   user with the `BOOKING_RESCHEDULE` permission. The booking **keeps its identity**
   (PRD-ASN-002); its existing reservations are released and new reservations created
   **atomically** — a new time whose resources are unavailable is rejected and leaves the
-  booking unchanged (422 if the slot is already taken; 409 on a concurrent race, PRD-RSV-004).
-  *(AT: BKG-AT-011)*
+  booking unchanged (**409** if the slot/turnover is already taken, sequential or concurrent;
+  **422** if otherwise infeasible, e.g. outside operating hours — PRD-RSV-004). *(AT: BKG-AT-011)*
 
 ### 7.10 Assignments & policies (`ASN`)
 

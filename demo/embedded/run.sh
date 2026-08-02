@@ -14,4 +14,5 @@ echo "Starting Allocra embedded demo (no Docker needed)."
 echo "First run downloads a PostgreSQL binary and project dependencies — please be patient."
 echo
 
-exec ./mvnw -q -Pdemo -pl demo/embedded -am spring-boot:run
+./mvnw -q -Pdemo -pl :demo-embedded -am -DskipTests install
+exec ./mvnw -q -Pdemo -pl :demo-embedded spring-boot:run

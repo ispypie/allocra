@@ -67,9 +67,14 @@ public class SchedulingSnapshotBuilder {
 			UUID chosenResource = chosen.get(row.id());
 			Set<UUID> required = chosenResource == null ? Set.of() : Set.of(chosenResource);
 			requirements.add(toSpec(row, required, Set.of()));
+			// Reservations are stripped: at confirmation the DB exclusion constraint is the
+			// authority for reservation/turnover conflicts (→ 409), while the engine checks
+			// only
+			// capability/availability/hours/compatibility (→ 422 when otherwise
+			// infeasible).
 			List<ResourceCandidate> pool = byKind.getOrDefault(row.kind(), List.of()).stream()
 					.filter(c -> chosenResource != null && c.resourceId().equals(chosenResource.toString()))
-					.collect(Collectors.toList());
+					.map(ResourceCandidate::withoutReservations).collect(Collectors.toList());
 			candidatesByRequirement.put(row.id().toString(), pool);
 		}
 		SearchParameters oneSlot = new SearchParameters(Duration.between(slot.start(), slot.end()), 1);

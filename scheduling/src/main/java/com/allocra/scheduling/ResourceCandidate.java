@@ -91,6 +91,17 @@ public record ResourceCandidate(String resourceId, BaseKind kind, String resourc
 	}
 
 	/**
+	 * A copy with no reservations. Used at confirmation, where reservation
+	 * conflicts are the database's authority (the exclusion constraint → HTTP 409,
+	 * ADR-004) rather than an engine-level infeasibility (HTTP 422). Capabilities,
+	 * availability and buffers are retained.
+	 */
+	public ResourceCandidate withoutReservations() {
+		return new ResourceCandidate(resourceId, kind, resourceTypeId, capabilities, availabilityWindows, blocked,
+				List.of(), compatibleResourceIds, setupMinutes, cleanupMinutes);
+	}
+
+	/**
 	 * True if the resource holds a capability satisfying {@code requirement} on the
 	 * date.
 	 */

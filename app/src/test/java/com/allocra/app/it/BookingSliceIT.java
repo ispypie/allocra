@@ -156,9 +156,8 @@ class BookingSliceIT {
 		assertThat(count("resource_assignment", bookingId)).isEqualTo(2);
 		assertThat(count("reservation", bookingId)).isEqualTo(2);
 
-		// Sequentially re-confirming the same slot is now infeasible (the resources are
-		// reserved).
-		assertThat(post("/v1/bookings", "sched", TENANT_A, confirmBody(start)).statusCode()).isEqualTo(422);
+		// Re-confirming the same slot now clashes with the reservation → 409 Conflict.
+		assertThat(post("/v1/bookings", "sched", TENANT_A, confirmBody(start)).statusCode()).isEqualTo(409);
 	}
 
 	@Test
@@ -189,8 +188,8 @@ class BookingSliceIT {
 
 		long successes = Stream.of(r1, r2).filter(o -> o instanceof UUID).count();
 		assertThat(successes).isEqualTo(1);
-		// The loser failed (a reservation conflict under a true race, or infeasible if
-		// it saw the winner's row).
+		// The loser failed with a reservation conflict (the DB exclusion constraint →
+		// 409).
 		assertThat(Stream.of(r1, r2).anyMatch(o -> o instanceof RuntimeException)).isTrue();
 		// Exactly one ACTIVE reservation exists for that resource/slot — no double
 		// booking.
@@ -320,10 +319,10 @@ class BookingSliceIT {
 		UUID blocker = confirmBooking(at(8, 0));
 		assertThat(blocker).isNotEqualTo(bookingId);
 
-		// Rescheduling onto the now-taken 08:00 slot is rejected; the booking is left
-		// unchanged.
+		// Rescheduling onto the now-taken 08:00 slot clashes (→ 409); the booking is
+		// left unchanged.
 		assertThat(post("/v1/bookings/" + bookingId + "/reschedule", "sched", TENANT_A, rescheduleBody(at(8, 0)))
-				.statusCode()).isEqualTo(422);
+				.statusCode()).isEqualTo(409);
 		BookingDto unchanged = json.readValue(get("/v1/bookings/" + bookingId, "sched", TENANT_A).body(),
 				BookingDto.class);
 		assertThat(unchanged.start()).isEqualTo(at(9, 0));
