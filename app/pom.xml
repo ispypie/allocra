@@ -29,6 +29,13 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- OpenAPI spec + Swagger UI so clients can generate typed SDKs (PRD-NFR-011, ADR-011) -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+
     <!-- Persistence + migrations (ADR-002, ADR-004, ADR-008) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

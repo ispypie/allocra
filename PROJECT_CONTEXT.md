@@ -68,9 +68,16 @@ Beyond the initial slice, the following are **implemented and CI-green**: bookin
 (cancel/complete/no-show, PRD-BKG-008/009; cancel releases reservations so the slot frees),
 booking reads (get/list, PRD-BKG-010/011), reschedule (PRD-BKG-012, keeps identity), and a
 **configuration API** (PRD-RES-010/SVC-008/AVL-004) so a bookable service can be set up
-entirely over HTTP — verified by `ConfigAndBookIT` (config→search→book). Next candidate work:
-availability blocks management, real Firebase token verifier (replace the stub, DEC-020), and
-the public self-service channel — all beyond the current milestone.
+entirely over HTTP — verified by `ConfigAndBookIT` (config→search→book).
+
+The API is **client-agnostic and multi-UI-client ready** (ADR-011, PRD-NFR-010/011): env-driven
+**CORS** (`allocra.cors.allowed-origins`) unblocks browser clients (React, Flutter web), and an
+**OpenAPI** spec (`/v3/api-docs`, `/swagger-ui`) lets Flutter and React generate typed SDKs.
+Decision: one shared admin API for all admin clients; a separate public API for the future
+self-service channel.
+
+Next candidate work: availability blocks management, real Firebase token verifier (replace the
+stub, DEC-020), and the public self-service channel — all beyond the current milestone.
 
 **We are not implementing the full product.** Do not build broad functionality until
 the foundation plan is reviewed.

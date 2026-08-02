@@ -45,7 +45,9 @@ public class TenantAuthFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
-		return request.getRequestURI().startsWith("/actuator");
+		String uri = request.getRequestURI();
+		// Operational and public API-documentation endpoints are not tenant-scoped.
+		return uri.startsWith("/actuator") || uri.startsWith("/v3/api-docs") || uri.startsWith("/swagger-ui");
 	}
 
 	@Override
