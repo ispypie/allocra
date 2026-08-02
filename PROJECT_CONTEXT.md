@@ -181,7 +181,7 @@ whether to enable RLS in phase 1, and UUID vs bigint identifier strategy (defaul
 | [docs/08-REQUIREMENTS-TRACEABILITY.md](docs/08-REQUIREMENTS-TRACEABILITY.md) | Requirement → code → test mapping |
 | [docs/09-VERTICAL-SLICE-PLAN.md](docs/09-VERTICAL-SLICE-PLAN.md) | Thin internal-booking vertical slice design (Deliverable C) |
 | [docs/10-ACCEPTANCE-TEST-PLAN.md](docs/10-ACCEPTANCE-TEST-PLAN.md) | Slice → PRD → acceptance-test mapping (Deliverable D) |
-| [docs/adr/](docs/adr/) | Architecture Decision Records (ADR-001 … ADR-010) |
+| [docs/adr/](docs/adr/) | Architecture Decision Records (ADR-001 … ADR-011) |
 
 ## Conflict precedence
 

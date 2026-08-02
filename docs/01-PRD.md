@@ -340,6 +340,12 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-NFR-008** *(ACCEPTED)* **CI** builds, tests and runs documentation validation on
   every change.
 - **PRD-NFR-009** *(ACCEPTED)* Current supported Java (**Java 21 LTS**) and Spring Boot 3.x.
+- **PRD-NFR-010** *(ACCEPTED)* The API is **client-agnostic and supports multiple UI clients**
+  (e.g. Flutter and React). **CORS** is configurable per environment
+  (`allocra.cors.allowed-origins`) and enforced ahead of authentication so browser clients and
+  their preflight requests work. Non-browser clients are unaffected. (ADR-011) *(AT: NFR-AT-001)*
+- **PRD-NFR-011** *(ACCEPTED)* The API publishes an **OpenAPI** specification so clients can
+  generate typed SDKs (TypeScript, Dart). (ADR-011) *(AT: NFR-AT-002)*
 
 ## 9. Security requirements (`SEC`)
 

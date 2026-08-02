@@ -107,6 +107,8 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-NFR-007 | ArchUnit boundary rules | VERIFIED | app (test) | `ArchitectureTest` (4 rules) | — | app `ArchitectureTest` | scheduling purity + app-dep rule |
 | PRD-NFR-008 | CI incl. doc validation | VERIFIED | ci / app (test) | `.github/workflows/ci.yml`, `DocumentationValidationTest` | — | app `DocumentationValidationTest` | |
 | PRD-NFR-009 | Java 21 + Spring Boot 3.x | IMPLEMENTED | (build) | root `pom.xml` (`release 21`, Spring Boot 3.4.1) | — | — | |
+| PRD-NFR-010 | Client-agnostic API; CORS for multiple UI clients | VERIFIED | app | `CorsConfig` (env-driven, ahead of auth) | NFR-AT-001 | app `CorsIT` | ADR-011 |
+| PRD-NFR-011 | Publish OpenAPI spec | PLANNED | app | _tbd_ (springdoc) | NFR-AT-002 | _tbd_ | Next push |
 | PRD-SEC-001 | Authenticated requests | VERIFIED | app | `TenantAuthFilter` (bearer required) | — | app `BookingSliceIT.unauthenticatedRejected` | |
 | PRD-SEC-002 | Active tenant from membership | VERIFIED | app | `TenantAuthFilter` + `AuthRepository` | TEN-AT-002 | app `BookingSliceIT.crossTenantRejected` | |
 | PRD-SEC-003 | Permission-based authz, auditable denials | VERIFIED | app/audit | `ConfirmBookingService` permission check; audit on success | MEM-AT-001 | app `BookingSliceIT.viewerCannotConfirm` | |

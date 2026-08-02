@@ -34,9 +34,12 @@ link to its replacement.
 | DEC-022 | Persistence via Spring JdbcClient | Use Spring `JdbcClient` with explicit tenant-scoped SQL (not JPA) for the slice, to keep tenant scoping explicit and use native PG features (generated `tstzrange`, exclusion constraint). Within the tech spec's "JPA/JDBC" allowance | ACCEPTED | 2026-08-01 | PRD-TEN-003, PRD-NFR-005 | ADR-002, ADR-004 |
 | DEC-023 | Slice infrastructure centralised in `app` | For the first slice, persistence/application/web adapters live in the `app` module against pure domain types owned by each module; per-module hexagonal adapters are a documented follow-up. Load-bearing invariants (scheduling purity, tenant isolation, booking/assignment/reservation separation) are preserved and ArchUnit-enforced | ACCEPTED | 2026-08-01 | PRD-NFR-007 | ADR-001 |
 | DEC-024 | Lifecycle outcome permission | Add `BOOKING_UPDATE` permission for COMPLETED/NO_SHOW transitions (distinct from `BOOKING_CANCEL` for cancellation); cancellation releases reservations to free the slot | ACCEPTED | 2026-08-01 | PRD-BKG-008/009, PRD-MEM-003 | — |
+| DEC-025 | API-first, multiple UI clients | One client-agnostic versioned REST/JSON API serves all UI clients (Flutter + React); shared admin API, separate public API for self-service; no per-client BFF; CORS configurable per environment | ACCEPTED | 2026-08-02 | PRD-NFR-010 | ADR-011 |
+| DEC-026 | Publish OpenAPI | Publish an OpenAPI spec (springdoc) so clients generate typed SDKs (TypeScript, Dart) | ACCEPTED | 2026-08-02 | PRD-NFR-011 | ADR-011 |
 
 ## Change log
 - 2026-08-01 — Initial register created with DEC-001..018 during Milestone 1 Deliverable A.
 - 2026-08-01 — Added DEC-019 (engineering quality gates) during Milestone 1 Deliverable B.
 - 2026-08-01 — Added DEC-020 (slice auth: stub verifier) and DEC-021 (buffers deferred) at start of slice implementation.
 - 2026-08-01 — Added DEC-022 (JdbcClient persistence) and DEC-023 (slice infra centralised in app) during slice implementation.
+- 2026-08-02 — Added DEC-024 (lifecycle outcome permission), DEC-025 (API-first, multiple UI clients) and DEC-026 (publish OpenAPI).
