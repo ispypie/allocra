@@ -1,10 +1,13 @@
-package com.allocra.demo;
+package com.allocra.app.demo;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -14,10 +17,15 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeds a sample organisation into the ephemeral demo database and prints a
- * cheat sheet so the API can be explored immediately (Swagger UI + bearer
- * tokens). Active only under the {@code demo} profile. Idempotency is
- * unnecessary — the demo database is fresh each run.
+ * Seeds a sample organisation and prints a cheat sheet so the API can be
+ * explored immediately (Swagger UI + bearer tokens). Active only under the
+ * {@code demo} profile, so it is inert in normal builds, tests and production.
+ * Shared by both demo environments (embedded and Compose).
+ *
+ * <p>
+ * Idempotent: if the demo tenant (slug {@code demo}) already exists — e.g. a
+ * Compose restart against a persistent volume — it reuses the existing data
+ * instead of re-seeding.
  */
 @Component
 @Profile("demo")
@@ -33,7 +41,13 @@ public class DemoDataSeeder implements ApplicationRunner {
 
 	@Override
 	public void run(ApplicationArguments args) {
-		UUID tenant = UUID.randomUUID();
+		Optional<UUID> existing = jdbc.sql("SELECT id FROM tenant WHERE slug = 'demo'").query(UUID.class).optional();
+		DemoIds ids = existing.map(this::load).orElseGet(this::seed);
+		printCheatSheet(ids, existing.isPresent());
+	}
+
+	private DemoIds seed() {
+		UUID tenant = id();
 		ins("INSERT INTO tenant(id,slug,display_name) VALUES(?,?,?)", tenant, "demo", "Demo Physio Clinic");
 
 		member(tenant, "admin", "Alex Admin", "ORG_ADMIN");
@@ -73,7 +87,24 @@ public class DemoDataSeeder implements ApplicationRunner {
 		UUID roomReq = requirement(tenant, service, "PLACE", true, null);
 		UUID equipReq = requirement(tenant, service, "ASSET", false, "ULTRASOUND");
 
-		printCheatSheet(tenant, service, staffReq, roomReq, equipReq, sam, roomA, ultrasound);
+		return new DemoIds(tenant, service, staffReq, roomReq, equipReq, sam, roomA, ultrasound);
+	}
+
+	private DemoIds load(UUID tenant) {
+		UUID service = jdbc.sql("SELECT id FROM service_type WHERE tenant_id = ? AND code = 'PHYSIO'").param(tenant)
+				.query(UUID.class).single();
+		Map<String, UUID> reqByKind = new HashMap<>();
+		jdbc.sql("SELECT id, base_kind FROM resource_requirement WHERE tenant_id = ? AND service_type_id = ?")
+				.params(tenant, service)
+				.query((rs, n) -> reqByKind.put(rs.getString("base_kind"), rs.getObject("id", UUID.class))).list();
+		return new DemoIds(tenant, service, reqByKind.get("PERSON"), reqByKind.get("PLACE"), reqByKind.get("ASSET"),
+				resourceIdByName(tenant, "Sam (Physio)"), resourceIdByName(tenant, "Room A"),
+				resourceIdByName(tenant, "Ultrasound Unit"));
+	}
+
+	private UUID resourceIdByName(UUID tenant, String name) {
+		return jdbc.sql("SELECT id FROM resource WHERE tenant_id = ? AND name = ?").params(tenant, name)
+				.query(UUID.class).optional().orElse(null);
 	}
 
 	private void member(UUID tenant, String firebaseUid, String displayName, String role) {
@@ -124,40 +155,40 @@ public class DemoDataSeeder implements ApplicationRunner {
 		return UUID.randomUUID();
 	}
 
-	private void printCheatSheet(UUID tenant, UUID service, UUID staffReq, UUID roomReq, UUID equipReq, UUID sam,
-			UUID roomA, UUID ultrasound) {
+	private void printCheatSheet(DemoIds ids, boolean reused) {
 		String base = "http://localhost:" + env.getProperty("local.server.port", "8080");
 		Instant slot = LocalDate.now(ZoneOffset.UTC).plusDays(1).atTime(10, 0).toInstant(ZoneOffset.UTC);
 		Instant from = LocalDate.now(ZoneOffset.UTC).atStartOfDay().toInstant(ZoneOffset.UTC);
 		Instant to = LocalDate.now(ZoneOffset.UTC).plusDays(7).atStartOfDay().toInstant(ZoneOffset.UTC);
 
-		String header = "X-Tenant-Id: " + tenant;
+		String header = "X-Tenant-Id: " + ids.tenant();
 		String bearer = "Authorization: Bearer scheduler";
 
 		StringBuilder b = new StringBuilder();
 		b.append("\n");
 		b.append("======================================================================\n");
-		b.append("  ALLOCRA DEMO — ready to explore (embedded PostgreSQL, no Docker)\n");
+		b.append("  ALLOCRA DEMO — ready to explore").append(reused ? " (reusing existing demo data)" : "")
+				.append("\n");
 		b.append("======================================================================\n");
 		b.append("  Swagger UI : ").append(base).append("/swagger-ui\n");
 		b.append("  OpenAPI    : ").append(base).append("/v3/api-docs\n");
 		b.append("  Health     : ").append(base).append("/actuator/health\n");
 		b.append("----------------------------------------------------------------------\n");
-		b.append("  Tenant id  : ").append(tenant).append("   (send as header 'X-Tenant-Id')\n");
+		b.append("  Tenant id  : ").append(ids.tenant()).append("   (send as header 'X-Tenant-Id')\n");
 		b.append("  Tokens     : send 'Authorization: Bearer <token>' — the token IS the user\n");
 		b.append("               admin      (all permissions)\n");
 		b.append("               scheduler  (create/cancel/reschedule/complete bookings)\n");
 		b.append("               viewer     (read only)\n");
 		b.append("----------------------------------------------------------------------\n");
-		b.append("  Service    : Physio Session  id=").append(service).append("\n");
-		b.append("    staff requirement id : ").append(staffReq).append("\n");
-		b.append("    room  requirement id : ").append(roomReq).append("\n");
-		b.append("    equip requirement id : ").append(equipReq).append("  (optional)\n");
-		b.append("  Sample resources: Sam=").append(sam).append("  RoomA=").append(roomA).append("  Ultrasound=")
-				.append(ultrasound).append("\n");
+		b.append("  Service    : Physio Session  id=").append(ids.service()).append("\n");
+		b.append("    staff requirement id : ").append(ids.staffReq()).append("\n");
+		b.append("    room  requirement id : ").append(ids.roomReq()).append("\n");
+		b.append("    equip requirement id : ").append(ids.equipReq()).append("  (optional)\n");
+		b.append("  Sample resources: Sam=").append(ids.sam()).append("  RoomA=").append(ids.roomA())
+				.append("  Ultrasound=").append(ids.ultrasound()).append("\n");
 		b.append("----------------------------------------------------------------------\n");
 		b.append("  1) Search availability:\n");
-		b.append("     curl -s -X POST '").append(base).append("/v1/services/").append(service)
+		b.append("     curl -s -X POST '").append(base).append("/v1/services/").append(ids.service())
 				.append("/availability/search' \\\n");
 		b.append("       -H '").append(header).append("' -H '").append(bearer).append("' \\\n");
 		b.append("       -H 'Content-Type: application/json' \\\n");
@@ -167,15 +198,19 @@ public class DemoDataSeeder implements ApplicationRunner {
 		b.append("     curl -s -X POST '").append(base).append("/v1/bookings' \\\n");
 		b.append("       -H '").append(header).append("' -H '").append(bearer).append("' \\\n");
 		b.append("       -H 'Content-Type: application/json' \\\n");
-		b.append("       -d '{\"serviceTypeId\":\"").append(service).append("\",\"start\":\"").append(slot)
+		b.append("       -d '{\"serviceTypeId\":\"").append(ids.service()).append("\",\"start\":\"").append(slot)
 				.append("\",\"subject\":{\"type\":\"PERSON\",\"displayName\":\"Alex\"},")
-				.append("\"assignments\":[{\"requirementId\":\"").append(staffReq).append("\",\"resourceId\":\"")
-				.append(sam).append("\"},{\"requirementId\":\"").append(roomReq).append("\",\"resourceId\":\"")
-				.append(roomA).append("\"}]}'\n");
+				.append("\"assignments\":[{\"requirementId\":\"").append(ids.staffReq()).append("\",\"resourceId\":\"")
+				.append(ids.sam()).append("\"},{\"requirementId\":\"").append(ids.roomReq())
+				.append("\",\"resourceId\":\"").append(ids.roomA()).append("\"}]}'\n");
 		b.append("\n");
 		b.append("  3) List bookings:  curl -s '").append(base).append("/v1/bookings' -H '").append(header)
 				.append("' -H '").append(bearer).append("'\n");
 		b.append("======================================================================\n");
 		System.out.println(b);
+	}
+
+	private record DemoIds(UUID tenant, UUID service, UUID staffReq, UUID roomReq, UUID equipReq, UUID sam, UUID roomA,
+			UUID ultrasound) {
 	}
 }

@@ -36,7 +36,7 @@ link to its replacement.
 | DEC-024 | Lifecycle outcome permission | Add `BOOKING_UPDATE` permission for COMPLETED/NO_SHOW transitions (distinct from `BOOKING_CANCEL` for cancellation); cancellation releases reservations to free the slot | ACCEPTED | 2026-08-01 | PRD-BKG-008/009, PRD-MEM-003 | — |
 | DEC-025 | API-first, multiple UI clients | One client-agnostic versioned REST/JSON API serves all UI clients (Flutter + React); shared admin API, separate public API for self-service; no per-client BFF; CORS configurable per environment | ACCEPTED | 2026-08-02 | PRD-NFR-010 | ADR-011 |
 | DEC-026 | Publish OpenAPI | Publish an OpenAPI spec (springdoc) so clients generate typed SDKs (TypeScript, Dart) | ACCEPTED | 2026-08-02 | PRD-NFR-011 | ADR-011 |
-| DEC-027 | Self-contained demo environments | Demos live under `demo/<env>/`, each with its own startup script + README. First: `embedded` (zonky embedded PostgreSQL, no Docker), isolated behind the `-Pdemo` Maven profile so CI/default builds never compile it. Explore via Swagger UI + stub tokens. Docker Compose demo planned | ACCEPTED | 2026-08-02 | PRD-NFR-002 | ADR-011 |
+| DEC-027 | Self-contained demo environments | Demos live under `demo/<env>/`, each with its own startup script + README. `embedded` (zonky embedded PostgreSQL, no Docker; isolated behind `-Pdemo` so CI/default builds never compile it) and `compose` (Docker: postgres + app, persistent). Both share an idempotent `@Profile("demo")` seeder in the app and are explored via Swagger UI + stub tokens | ACCEPTED | 2026-08-02 | PRD-NFR-002 | ADR-011 |
 
 ## Change log
 - 2026-08-01 — Initial register created with DEC-001..018 during Milestone 1 Deliverable A.
