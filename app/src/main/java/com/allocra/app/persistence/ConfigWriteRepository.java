@@ -45,11 +45,10 @@ public class ConfigWriteRepository {
 	}
 
 	public void insertResource(TenantId tenantId, UUID id, UUID resourceTypeId, String name, UUID locationId,
-			String mobility) {
-		jdbc.sql(
-				"INSERT INTO resource(tenant_id, id, resource_type_id, name, location_id, mobility) VALUES (?,?,?,?,?,?)")
-				.param(tenantId.value()).param(id).param(resourceTypeId).param(name).param(locationId).param(mobility)
-				.update();
+			String mobility, int setupMinutes, int cleanupMinutes) {
+		jdbc.sql("INSERT INTO resource(tenant_id, id, resource_type_id, name, location_id, mobility, setup_minutes,"
+				+ " cleanup_minutes) VALUES (?,?,?,?,?,?,?,?)").param(tenantId.value()).param(id).param(resourceTypeId)
+				.param(name).param(locationId).param(mobility).param(setupMinutes).param(cleanupMinutes).update();
 	}
 
 	public void insertCapability(TenantId tenantId, UUID id, UUID resourceId, String type, Integer level,
@@ -66,9 +65,11 @@ public class ConfigWriteRepository {
 				.params(tenantId.value(), resourceId, compatibleResourceId).update();
 	}
 
-	public void insertServiceType(TenantId tenantId, UUID id, String code, String name, int durationMinutes) {
-		jdbc.sql("INSERT INTO service_type(tenant_id, id, code, name, duration_minutes) VALUES (?,?,?,?,?)")
-				.params(tenantId.value(), id, code, name, durationMinutes).update();
+	public void insertServiceType(TenantId tenantId, UUID id, String code, String name, int durationMinutes,
+			int leadMinutes) {
+		jdbc.sql(
+				"INSERT INTO service_type(tenant_id, id, code, name, duration_minutes, lead_minutes) VALUES (?,?,?,?,?,?)")
+				.params(tenantId.value(), id, code, name, durationMinutes, leadMinutes).update();
 	}
 
 	public void insertRequirement(TenantId tenantId, UUID id, UUID serviceTypeId, String baseKind, boolean required,

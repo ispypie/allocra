@@ -67,15 +67,15 @@ referencing an unknown requirement id; a test referencing an unknown PRD id.
 | PRD-AVL-006 | Location closures (full-day) | VERIFIED | app | `V9` schema; `CandidateRepository`; `ConfigController` closures endpoint | AVL-AT-004 | app `BusinessHoursIT` | |
 | PRD-AVL-007 | Location timezone (DST-aware) | VERIFIED | app | `location.timezone`; `CandidateRepository` zone conversion (Europe/London BST verified) | AVL-AT-003 | app `BusinessHoursIT` | |
 | PRD-AVL-008 | Per-person working hours/days | VERIFIED | availability/scheduling | `availability_rule` + `blocked_availability` (staff = PERSON resource) | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest`; app `BookingSliceIT` | Already implemented |
-| PRD-SVC-009 | Service lead/prep time | PLANNED | services | _tbd_ (buffer model) | — | — | Recorded; not built |
-| PRD-RES-012 | Resource setup/cleanup time | PLANNED | resources | _tbd_ (buffer model) | RES-AT-005 | _tbd_ | Recorded; not built |
+| PRD-SVC-009 | Service lead/prep time | VERIFIED | app/scheduling | `service_type.lead_minutes`; `SchedulingSnapshot.leadMinutes`; `ResourceCandidate.reservedWindow` | RES-AT-005 | scheduling `DirectAvailabilitySearchTest.serviceLeadTimeExcludesSlot` | |
+| PRD-RES-012 | Resource setup/cleanup time | VERIFIED | app/scheduling | `resource.setup_minutes/cleanup_minutes`; `ResourceCandidate.reservedWindow`; `ConfirmBookingService` buffered reservations | RES-AT-005 | scheduling `DirectAvailabilitySearchTest` (setup/cleanup); app `BufferIT` | |
 | PRD-AVL-003 | Availability = rules ∩ ¬blocks ∩ ¬reservations | IMPLEMENTED | scheduling | `ResourceCandidate.availableFor` | AVL-AT-001 | scheduling `DirectAvailabilitySearchTest.availabilityIsIntersectionOfRulesBlocksAndReservations` | Domain-verified |
 | PRD-SCH-001 | Stateless engine; immutable snapshot | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (no fields), `SchedulingSnapshot` (immutable) | SCH-AT-005 | scheduling `DirectAvailabilitySearchTest.engineIsStateless`; app `ArchitectureTest` | Domain-verified |
 | PRD-SCH-002 | Hard constraints enumerated | IMPLEMENTED | scheduling | `DirectAvailabilitySearch.isFeasible` | SCH-AT-001/002 | scheduling `DirectAvailabilitySearchTest` | Domain-verified |
 | PRD-SCH-003 | Soft constraints rank | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (preferred bonus + sort) | SCH-AT-004 | scheduling `DirectAvailabilitySearchTest.preferredStaffIsRankedHigher` | Domain-verified |
 | PRD-SCH-004 | Direct search never reassigns | IMPLEMENTED | scheduling | `DirectAvailabilitySearch` (reservations block, never freed) | BKG-AT-006 | scheduling `DirectAvailabilitySearchTest.directSearchNeverReassignsExistingReservation` | Domain-verified |
 | PRD-SCH-005 | Simple search: horizon/increment/limit | PLANNED | scheduling | _tbd_ | — | — | OQ-SCH-1 |
-| PRD-SCH-006 | Buffers extend consumption window | PLANNED | scheduling/reservations | _tbd_ | RES-AT-005 | _tbd_ | OQ-BUF-1 |
+| PRD-SCH-006 | Buffers extend consumption window | VERIFIED | scheduling/app | `ResourceCandidate.reservedWindow`; engine reservation check on buffered window; `ConfirmBookingService` | RES-AT-005 | scheduling `DirectAvailabilitySearchTest`; app `BufferIT` | |
 | PRD-SCH-007 | Schedule repair | DEFERRED | scheduling | — | — | — | DEC-014 |
 | PRD-SCH-008 | Whole-schedule optimisation | DEFERRED | scheduling | — | — | — | DEC-015 |
 | PRD-SUB-001 | BookingSubject (not Customer) | VERIFIED | bookings/app | `BookingSubject` VO; embedded on `booking` | — | app `BookingSliceIT` | |

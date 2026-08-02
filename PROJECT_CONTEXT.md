@@ -76,8 +76,12 @@ The API is **client-agnostic and multi-UI-client ready** (ADR-011, PRD-NFR-010/0
 Decision: one shared admin API for all admin clients; a separate public API for the future
 self-service channel.
 
-Next candidate work: availability blocks management, real Firebase token verifier (replace the
-stub, DEC-020), and the public self-service channel — all beyond the current milestone.
+Also implemented & CI-green: **location business hours, closures and timezone** (PRD-AVL-005/006/007,
+DEC-028; folded into effective availability, engine unchanged) and **lead/setup/cleanup buffers**
+(PRD-SVC-009/RES-012, DEC-029; resources reserved for `[start − lead − setup, end + cleanup)`).
+
+Next candidate work: availability-block management endpoints, real Firebase token verifier
+(replace the stub, DEC-020), and the public self-service channel — all beyond the current milestone.
 
 **We are not implementing the full product.** Do not build broad functionality until
 the foundation plan is reviewed.

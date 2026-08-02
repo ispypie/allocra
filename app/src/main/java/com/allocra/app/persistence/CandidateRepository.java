@@ -56,14 +56,15 @@ public class CandidateRepository {
 		Map<UUID, Acc> accs = new LinkedHashMap<>();
 
 		jdbc.sql("""
-				SELECT r.id, r.resource_type_id, r.location_id
+				SELECT r.id, r.resource_type_id, r.location_id, r.setup_minutes, r.cleanup_minutes
 				FROM resource r
 				JOIN resource_type t ON t.tenant_id = r.tenant_id AND t.id = r.resource_type_id
 				WHERE r.tenant_id = ? AND t.base_kind = ? AND r.active = true
 				ORDER BY r.id
 				""").param(tenant).param(kindName)
 				.query((rs, n) -> new Acc(rs.getObject("id", UUID.class), kind,
-						rs.getObject("resource_type_id", UUID.class), rs.getObject("location_id", UUID.class)))
+						rs.getObject("resource_type_id", UUID.class), rs.getObject("location_id", UUID.class),
+						rs.getInt("setup_minutes"), rs.getInt("cleanup_minutes")))
 				.list().forEach(a -> accs.put(a.id, a));
 
 		if (accs.isEmpty()) {
@@ -126,7 +127,7 @@ public class CandidateRepository {
 			List<ClosureRange> closures = locations.closuresOf(a.locationId);
 			List<Interval> availability = effectiveAvailability(a.rules, hours, closures, zone, window);
 			candidates.add(new ResourceCandidate(a.id.toString(), a.kind, a.resourceTypeId.toString(), a.capabilities,
-					availability, a.blocked, a.reservations, a.compatible));
+					availability, a.blocked, a.reservations, a.compatible, a.setupMinutes, a.cleanupMinutes));
 		}
 		return candidates;
 	}
@@ -293,17 +294,22 @@ public class CandidateRepository {
 		private final BaseKind kind;
 		private final UUID resourceTypeId;
 		private final UUID locationId;
+		private final int setupMinutes;
+		private final int cleanupMinutes;
 		private final List<CapabilitySpec> capabilities = new ArrayList<>();
 		private final List<DayRange> rules = new ArrayList<>();
 		private final List<Interval> blocked = new ArrayList<>();
 		private final List<Interval> reservations = new ArrayList<>();
 		private final Set<String> compatible = new LinkedHashSet<>();
 
-		private Acc(UUID id, BaseKind kind, UUID resourceTypeId, UUID locationId) {
+		private Acc(UUID id, BaseKind kind, UUID resourceTypeId, UUID locationId, int setupMinutes,
+				int cleanupMinutes) {
 			this.id = id;
 			this.kind = kind;
 			this.resourceTypeId = resourceTypeId;
 			this.locationId = locationId;
+			this.setupMinutes = setupMinutes;
+			this.cleanupMinutes = cleanupMinutes;
 		}
 	}
 }

@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Direct availability search (PRD-SCH-004): finds feasible, ranked options for
@@ -27,9 +28,10 @@ import java.util.Map;
  * increment, and for each slot resolves a consistent combination of resources
  * (one per requirement) that satisfies every hard constraint — capability +
  * validity (PRD-SVC-006), availability (PRD-AVL-003), required-resource
- * allowlist (PRD-SVC-005), and cross-requirement compatibility (PRD-RES-008).
- * Options are ranked by soft score (PRD-SCH-003), then earliest slot, and
- * capped at {@link SearchParameters#maxResults()}.
+ * allowlist (PRD-SVC-005), lead/setup buffers (PRD-SVC-009, PRD-RES-012), and
+ * cross-requirement compatibility (PRD-RES-008). Options are ranked by soft
+ * score (PRD-SCH-003), then earliest slot, and capped at
+ * {@link SearchParameters#maxResults()}.
  */
 public final class DirectAvailabilitySearch {
 
@@ -60,17 +62,12 @@ public final class DirectAvailabilitySearch {
 		return slots;
 	}
 
-	/**
-	 * Attempts to resolve a consistent assignment for every hard requirement at
-	 * {@code slot}, choosing higher-scoring (preferred) resources first, and
-	 * returns the best option found.
-	 */
-	private java.util.Optional<CandidateOption> buildOptionForSlot(SchedulingSnapshot snapshot, Interval slot,
+	private Optional<CandidateOption> buildOptionForSlot(SchedulingSnapshot snapshot, Interval slot,
 			LocalDate appointmentDate) {
 		Map<String, ResourceCandidate> chosen = new LinkedHashMap<>();
 		boolean resolved = assign(snapshot.requirements(), 0, snapshot, slot, appointmentDate, chosen);
 		if (!resolved) {
-			return java.util.Optional.empty();
+			return Optional.empty();
 		}
 		List<AssignmentChoice> assignments = new ArrayList<>();
 		double score = 0.0;
@@ -84,15 +81,9 @@ public final class DirectAvailabilitySearch {
 				score += PREFERRED_BONUS;
 			}
 		}
-		return java.util.Optional.of(new CandidateOption(slot, assignments, score));
+		return Optional.of(new CandidateOption(slot, assignments, score));
 	}
 
-	/**
-	 * Depth-first assignment across requirements with backtracking. Required
-	 * requirements must be assigned a compatible feasible resource; optional
-	 * requirements may be skipped when no compatible feasible resource exists
-	 * (PRD-SVC-003).
-	 */
 	private boolean assign(List<RequirementSpec> requirements, int index, SchedulingSnapshot snapshot, Interval slot,
 			LocalDate appointmentDate, Map<String, ResourceCandidate> chosen) {
 		if (index == requirements.size()) {
@@ -108,23 +99,17 @@ public final class DirectAvailabilitySearch {
 				chosen.remove(requirement.requirementId());
 			}
 		}
-		// Optional requirements may be left unsatisfied and still yield a feasible
-		// option.
 		if (!requirement.required()) {
 			return assign(requirements, index + 1, snapshot, slot, appointmentDate, chosen);
 		}
 		return false;
 	}
 
-	/**
-	 * Feasible candidates for a requirement at a slot, preferred ones first
-	 * (best-score-first).
-	 */
 	private List<ResourceCandidate> orderedFeasible(RequirementSpec requirement, SchedulingSnapshot snapshot,
 			Interval slot, LocalDate appointmentDate) {
 		List<ResourceCandidate> feasible = new ArrayList<>();
 		for (ResourceCandidate candidate : snapshot.candidatesFor(requirement)) {
-			if (isFeasible(requirement, candidate, slot, appointmentDate)) {
+			if (isFeasible(requirement, candidate, slot, appointmentDate, snapshot.leadMinutes())) {
 				feasible.add(candidate);
 			}
 		}
@@ -134,7 +119,7 @@ public final class DirectAvailabilitySearch {
 
 	/** Hard-constraint check for a single (requirement, resource) at a slot. */
 	private boolean isFeasible(RequirementSpec requirement, ResourceCandidate candidate, Interval slot,
-			LocalDate appointmentDate) {
+			LocalDate appointmentDate, int leadMinutes) {
 		if (candidate.kind() != requirement.kind()) {
 			return false;
 		}
@@ -144,7 +129,12 @@ public final class DirectAvailabilitySearch {
 		if (requirement.capability() != null && !candidate.hasCapability(requirement.capability(), appointmentDate)) {
 			return false; // qualification / validity (PRD-SVC-006)
 		}
-		return candidate.availableFor(slot); // availability ∩ ¬blocks ∩ ¬reservations (PRD-AVL-003)
+		if (!candidate.withinAvailability(slot)) {
+			return false; // availability ∩ ¬blocks over the appointment window (PRD-AVL-003)
+		}
+		// Reservations contend over the buffered window (lead + setup before, cleanup
+		// after).
+		return candidate.reservedFree(candidate.reservedWindow(slot, leadMinutes));
 	}
 
 	private boolean compatibleWithChosen(ResourceCandidate candidate, Map<String, ResourceCandidate> chosen) {

@@ -8,10 +8,10 @@ import java.util.Objects;
 /**
  * The immutable input to the scheduling engine (PRD-SCH-001). It carries
  * everything needed to compute candidate options — the request window and
- * service duration, the service's requirements, and the candidate resources per
- * requirement (with their capabilities, availability, blocks and existing
- * reservations) — captured as immutable data. The engine reads a snapshot and
- * returns ranked candidates without mutating anything.
+ * service duration, the service's requirements, the candidate resources per
+ * requirement, and the service lead time — captured as immutable data. The
+ * engine reads a snapshot and returns ranked candidates without mutating
+ * anything.
  *
  * <p>
  * The application layer builds a snapshot from tenant-scoped repositories; the
@@ -28,9 +28,12 @@ import java.util.Objects;
  *            candidate resources keyed by requirement id
  * @param parameters
  *            search tuning (increment, result cap)
+ * @param leadMinutes
+ *            service lead/prep time applied before every appointment
+ *            (PRD-SVC-009)
  */
 public record SchedulingSnapshot(Interval requestWindow, Duration serviceDuration, List<RequirementSpec> requirements,
-		Map<String, List<ResourceCandidate>> candidatesByRequirement, SearchParameters parameters) {
+		Map<String, List<ResourceCandidate>> candidatesByRequirement, SearchParameters parameters, int leadMinutes) {
 
 	public SchedulingSnapshot {
 		Objects.requireNonNull(requestWindow, "requestWindow");
@@ -41,9 +44,27 @@ public record SchedulingSnapshot(Interval requestWindow, Duration serviceDuratio
 		requirements = List.copyOf(requirements);
 		candidatesByRequirement = Map.copyOf(candidatesByRequirement);
 		Objects.requireNonNull(parameters, "parameters");
+		if (leadMinutes < 0) {
+			throw new IllegalArgumentException("leadMinutes must be >= 0");
+		}
+	}
+
+	/** Convenience for a service with no lead time. */
+	public SchedulingSnapshot(Interval requestWindow, Duration serviceDuration, List<RequirementSpec> requirements,
+			Map<String, List<ResourceCandidate>> candidatesByRequirement, SearchParameters parameters) {
+		this(requestWindow, serviceDuration, requirements, candidatesByRequirement, parameters, 0);
 	}
 
 	List<ResourceCandidate> candidatesFor(RequirementSpec requirement) {
 		return candidatesByRequirement.getOrDefault(requirement.requirementId(), List.of());
+	}
+
+	/**
+	 * The candidate for a specific requirement + resource, if present (used at
+	 * confirmation).
+	 */
+	public ResourceCandidate candidateFor(String requirementId, String resourceId) {
+		return candidatesByRequirement.getOrDefault(requirementId, List.of()).stream()
+				.filter(c -> c.resourceId().equals(resourceId)).findFirst().orElse(null);
 	}
 }

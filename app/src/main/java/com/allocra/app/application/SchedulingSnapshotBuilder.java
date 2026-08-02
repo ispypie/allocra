@@ -49,7 +49,8 @@ public class SchedulingSnapshotBuilder {
 			requirements.add(toSpec(row, pref.requiredResourceIds(), pref.preferredResourceIds()));
 			candidatesByRequirement.put(row.id().toString(), byKind.getOrDefault(row.kind(), List.of()));
 		}
-		return new SchedulingSnapshot(window, durationOf(service), requirements, candidatesByRequirement, parameters);
+		return new SchedulingSnapshot(window, durationOf(service), requirements, candidatesByRequirement, parameters,
+				service.leadMinutes());
 	}
 
 	/**
@@ -72,7 +73,8 @@ public class SchedulingSnapshotBuilder {
 			candidatesByRequirement.put(row.id().toString(), pool);
 		}
 		SearchParameters oneSlot = new SearchParameters(Duration.between(slot.start(), slot.end()), 1);
-		return new SchedulingSnapshot(slot, durationOf(service), requirements, candidatesByRequirement, oneSlot);
+		return new SchedulingSnapshot(slot, durationOf(service), requirements, candidatesByRequirement, oneSlot,
+				service.leadMinutes());
 	}
 
 	private Map<BaseKind, List<ResourceCandidate>> loadByKind(TenantId tenantId, ServiceDefinition service,

@@ -30,13 +30,14 @@ public final class ConfigApi {
 	}
 
 	public record CreateResourceRequest(UUID resourceTypeId, String name, UUID locationId, String mobility,
-			List<CapabilitySpecDto> capabilities, List<UUID> compatibleResourceIds) {
+			List<CapabilitySpecDto> capabilities, List<UUID> compatibleResourceIds, int setupMinutes,
+			int cleanupMinutes) {
 	}
 
 	public record CapabilitySpecDto(String type, Integer level, LocalDate validFrom, LocalDate validTo) {
 	}
 
-	public record CreateServiceRequest(String code, String name, int durationMinutes,
+	public record CreateServiceRequest(String code, String name, int durationMinutes, int leadMinutes,
 			List<RequirementSpecDto> requirements) {
 	}
 

@@ -105,9 +105,9 @@ class ConfigAndBookIT {
 				json.writeValueAsString(new CreateResourceTypeRequest("ROOM", "PLACE"))));
 
 		UUID staff = created(post("/v1/resources", "admin", json.writeValueAsString(new CreateResourceRequest(staffType,
-				"Sam Physio", null, null, List.of(new CapabilitySpecDto("PHYSIO", null, null, null)), null))));
+				"Sam Physio", null, null, List.of(new CapabilitySpecDto("PHYSIO", null, null, null)), null, 0, 0))));
 		UUID room = created(post("/v1/resources", "admin",
-				json.writeValueAsString(new CreateResourceRequest(roomType, "Room 1", null, null, null, null))));
+				json.writeValueAsString(new CreateResourceRequest(roomType, "Room 1", null, null, null, null, 0, 0))));
 
 		int dow = DATE.getDayOfWeek().getValue();
 		for (UUID r : List.of(staff, room)) {
@@ -119,7 +119,7 @@ class ConfigAndBookIT {
 
 		CreatedServiceResponse service = json.readValue(
 				post("/v1/services", "admin",
-						json.writeValueAsString(new CreateServiceRequest("TREAT", "Treatment", 60,
+						json.writeValueAsString(new CreateServiceRequest("TREAT", "Treatment", 60, 0,
 								List.of(new RequirementSpecDto("PERSON", true, "ANY", "PHYSIO", null),
 										new RequirementSpecDto("PLACE", true, "ANY", null, null)))))
 						.body(),

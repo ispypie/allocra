@@ -23,10 +23,11 @@ public class CatalogRepository {
 	}
 
 	public Optional<ServiceDefinition> findService(TenantId tenantId, UUID serviceTypeId) {
-		Optional<Integer> duration = jdbc
-				.sql("SELECT duration_minutes FROM service_type WHERE tenant_id = ? AND id = ?").param(tenantId.value())
-				.param(serviceTypeId).query(Integer.class).optional();
-		if (duration.isEmpty()) {
+		Optional<int[]> durations = jdbc
+				.sql("SELECT duration_minutes, lead_minutes FROM service_type WHERE tenant_id = ? AND id = ?")
+				.param(tenantId.value()).param(serviceTypeId)
+				.query((rs, n) -> new int[]{rs.getInt("duration_minutes"), rs.getInt("lead_minutes")}).optional();
+		if (durations.isEmpty()) {
 			return Optional.empty();
 		}
 		List<RequirementRow> requirements = jdbc.sql("""
@@ -41,11 +42,12 @@ public class CatalogRepository {
 			return new RequirementRow(rs.getObject("id", UUID.class), BaseKind.valueOf(rs.getString("base_kind")),
 					rs.getBoolean("required"), rs.getString("selection_mode"), capability);
 		}).list();
-		return Optional.of(new ServiceDefinition(serviceTypeId, duration.get(), requirements));
+		return Optional.of(new ServiceDefinition(serviceTypeId, durations.get()[0], durations.get()[1], requirements));
 	}
 
 	/** A service and its requirements. */
-	public record ServiceDefinition(UUID serviceTypeId, int durationMinutes, List<RequirementRow> requirements) {
+	public record ServiceDefinition(UUID serviceTypeId, int durationMinutes, int leadMinutes,
+			List<RequirementRow> requirements) {
 		public ServiceDefinition {
 			requirements = List.copyOf(requirements);
 		}

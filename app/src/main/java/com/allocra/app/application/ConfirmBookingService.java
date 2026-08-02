@@ -22,6 +22,7 @@ import com.allocra.scheduling.AssignmentChoice;
 import com.allocra.scheduling.CandidateOption;
 import com.allocra.scheduling.DirectAvailabilitySearch;
 import com.allocra.scheduling.Interval;
+import com.allocra.scheduling.ResourceCandidate;
 import com.allocra.scheduling.SchedulingSnapshot;
 import java.time.Duration;
 import java.time.Instant;
@@ -93,14 +94,22 @@ public class ConfirmBookingService {
 			UUID resourceId = UUID.fromString(choice.resourceId());
 			writes.insertAssignment(tenantId, new ResourceAssignment(UUID.randomUUID(), bookingId, requirementId,
 					resourceId, AssignmentPolicy.REASSIGNABLE));
-			// Every assigned resource is exclusive in the slice → one reservation each
-			// (PRD-RSV-003).
-			writes.insertReservation(new Reservation(tenantId, UUID.randomUUID(), bookingId, resourceId, slot.start(),
-					slot.end(), ReservationStatus.ACTIVE));
+			// Every assigned resource is exclusive → one reservation each (PRD-RSV-003),
+			// over the
+			// buffered window (lead + setup before, cleanup after) so turnover is
+			// protected.
+			Interval reserved = reservedWindow(snapshot, choice, slot);
+			writes.insertReservation(new Reservation(tenantId, UUID.randomUUID(), bookingId, resourceId,
+					reserved.start(), reserved.end(), ReservationStatus.ACTIVE));
 		}
 
 		writes.insertAudit(tenantId, membership.userId().toString(), "BOOKING_CONFIRMED", "booking", bookingId);
 		return bookingId;
+	}
+
+	private static Interval reservedWindow(SchedulingSnapshot snapshot, AssignmentChoice choice, Interval slot) {
+		ResourceCandidate candidate = snapshot.candidateFor(choice.requirementId(), choice.resourceId());
+		return candidate == null ? slot : candidate.reservedWindow(slot, snapshot.leadMinutes());
 	}
 
 	/**

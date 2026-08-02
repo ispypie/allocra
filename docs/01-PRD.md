@@ -172,10 +172,10 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-RES-010** *(ACCEPTED)* Locations, resource types and resources (with capabilities,
   compatibility and mobility) can be **created via the API** by a user with the
   `RESOURCE_MANAGE` permission; all are tenant-scoped. *(AT: RES-AT-006)*
-- **PRD-RES-012** *(ACCEPTED — implementation planned)* A `Resource` (e.g. a room or
-  equipment) may define **setup and cleanup times**; the resource is reserved for
-  `[start − setup, end + cleanup)`, extending the contended window (PRD-SCH-006). Not yet
-  implemented (concrete realisation of the deferred RES-AT-005 / DEC-021).
+- **PRD-RES-012** *(ACCEPTED)* A `Resource` (e.g. a room or equipment) may define **setup and
+  cleanup times**; the resource is reserved for `[start − lead − setup, end + cleanup)`,
+  extending the contended window so turnover is protected (PRD-SCH-006, PRD-SVC-009).
+  *(AT: RES-AT-005)*
 
 ### 7.5 Services & requirements (`SVC`)
 
@@ -200,9 +200,9 @@ CRM; Redis/microservices/Kafka/CQRS/event-sourcing/rules-engine.
 - **PRD-SVC-008** *(ACCEPTED)* Service types (with their requirements) can be **created via
   the API** by a user with the `SERVICE_MANAGE` permission; creation returns the generated
   requirement ids so a client can reference them when booking. Tenant-scoped. *(AT: SVC-AT-002)*
-- **PRD-SVC-009** *(ACCEPTED — implementation planned)* A `ServiceType` may define a **lead /
-  prep time** applied before the appointment; the assigned resources are reserved from
-  `start − lead`. Builds on the buffer model (PRD-SCH-006). Not yet implemented.
+- **PRD-SVC-009** *(ACCEPTED)* A `ServiceType` may define a **lead / prep time** applied before
+  the appointment; the assigned resources are reserved from `start − lead` (PRD-SCH-006).
+  *(AT: RES-AT-005)*
 
 ### 7.6 Availability (`AVL`)
 

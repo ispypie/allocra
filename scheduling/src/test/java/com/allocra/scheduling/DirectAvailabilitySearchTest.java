@@ -282,6 +282,66 @@ class DirectAvailabilitySearchTest {
 	// --- fixtures
 	// -----------------------------------------------------------------------
 
+	@Test
+	@DisplayName("PRD-RES-012 / RES-AT-005: a resource setup buffer excludes a slot too close to a prior reservation")
+	void setupBufferExcludesSlotTooClose() {
+		RequirementSpec staffReq = anyStaffRequiring(CapabilityRequirement.of("PHYSIO"));
+		Interval priorReservation = new Interval(NINE.plus(ONE_HOUR), NINE.plus(Duration.ofHours(2))); // 10:00–11:00
+		Interval window = new Interval(NINE.plus(Duration.ofHours(2)), NINE.plus(Duration.ofHours(3))); // slot
+																										// 11:00–12:00
+
+		// With a 30-min setup, the slot's buffered window [10:30,12:00] overlaps the
+		// prior reservation.
+		List<CandidateOption> buffered = engine.search(snapshot(window, staffReq,
+				Map.of("r-staff", List.of(staffWithBuffer("s1", 30, 0, List.of(priorReservation))))));
+		assertThat(buffered).isEmpty();
+
+		// With no setup, the same slot [11:00,12:00] is adjacent (not overlapping) →
+		// feasible.
+		List<CandidateOption> unbuffered = engine.search(snapshot(window, staffReq,
+				Map.of("r-staff", List.of(staffWithBuffer("s1", 0, 0, List.of(priorReservation))))));
+		assertThat(unbuffered).isNotEmpty();
+	}
+
+	@Test
+	@DisplayName("PRD-RES-012 / RES-AT-005: a resource cleanup buffer excludes a slot ending too close to a later reservation")
+	void cleanupBufferExcludesSlotTooClose() {
+		RequirementSpec staffReq = anyStaffRequiring(CapabilityRequirement.of("PHYSIO"));
+		Interval laterReservation = new Interval(NINE.plus(Duration.ofHours(2)), NINE.plus(Duration.ofHours(3))); // 11:00–12:00
+		Interval window = new Interval(NINE.plus(ONE_HOUR), NINE.plus(Duration.ofHours(2))); // slot 10:00–11:00
+
+		List<CandidateOption> buffered = engine.search(snapshot(window, staffReq,
+				Map.of("r-staff", List.of(staffWithBuffer("s1", 0, 30, List.of(laterReservation))))));
+		assertThat(buffered).isEmpty();
+
+		List<CandidateOption> unbuffered = engine.search(snapshot(window, staffReq,
+				Map.of("r-staff", List.of(staffWithBuffer("s1", 0, 0, List.of(laterReservation))))));
+		assertThat(unbuffered).isNotEmpty();
+	}
+
+	@Test
+	@DisplayName("PRD-SVC-009 / RES-AT-005: a service lead time excludes a slot whose prep overlaps a prior reservation")
+	void serviceLeadTimeExcludesSlot() {
+		RequirementSpec staffReq = anyStaffRequiring(CapabilityRequirement.of("PHYSIO"));
+		Interval priorReservation = new Interval(NINE, NINE.plus(ONE_HOUR)); // 09:00–10:00
+		Interval window = new Interval(NINE.plus(ONE_HOUR), NINE.plus(Duration.ofHours(2))); // slot 10:00–11:00
+		ResourceCandidate staff = staffWithBuffer("s1", 0, 0, List.of(priorReservation));
+
+		// 30-min lead → buffered window [09:30,11:00] overlaps the prior reservation →
+		// infeasible.
+		SchedulingSnapshot withLead = new SchedulingSnapshot(window, ONE_HOUR, List.of(staffReq),
+				Map.of("r-staff", List.of(staff)), SearchParameters.defaults(), 30);
+		assertThat(engine.search(withLead)).isEmpty();
+
+		// No lead → slot [10:00,11:00] is adjacent to the reservation → feasible.
+		assertThat(engine.search(snapshot(window, staffReq, Map.of("r-staff", List.of(staff))))).isNotEmpty();
+	}
+
+	private static ResourceCandidate staffWithBuffer(String id, int setup, int cleanup, List<Interval> reservations) {
+		return new ResourceCandidate(id, BaseKind.PERSON, "type-staff", List.of(CapabilitySpec.of("PHYSIO")), fullDay(),
+				List.of(), reservations, Set.of(), setup, cleanup);
+	}
+
 	private static Interval oneHourWindow() {
 		return new Interval(NINE, NINE.plus(ONE_HOUR)); // exactly one 1-hour slot
 	}

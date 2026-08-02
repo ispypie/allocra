@@ -73,7 +73,7 @@ public class ConfigService {
 		require(membership, Permission.RESOURCE_MANAGE);
 		UUID id = UUID.randomUUID();
 		config.insertResource(tenantId, id, request.resourceTypeId(), request.name(), request.locationId(),
-				request.mobility());
+				request.mobility(), request.setupMinutes(), request.cleanupMinutes());
 		if (request.capabilities() != null) {
 			for (CapabilitySpecDto c : request.capabilities()) {
 				config.insertCapability(tenantId, UUID.randomUUID(), id, c.type(), c.level(), c.validFrom(),
@@ -102,7 +102,8 @@ public class ConfigService {
 			CreateServiceRequest request) {
 		require(membership, Permission.SERVICE_MANAGE);
 		UUID serviceTypeId = UUID.randomUUID();
-		config.insertServiceType(tenantId, serviceTypeId, request.code(), request.name(), request.durationMinutes());
+		config.insertServiceType(tenantId, serviceTypeId, request.code(), request.name(), request.durationMinutes(),
+				request.leadMinutes());
 		List<CreatedRequirement> created = new ArrayList<>();
 		if (request.requirements() != null) {
 			for (RequirementSpecDto r : request.requirements()) {
